@@ -71,4 +71,3 @@ public class BoardController extends HttpServlet {
 
 
 }
-//todo 롬복 맵스트럭트 스프링부트 마이바티스 리액트 자바스크립트(공식문서)
