@@ -11,7 +11,7 @@ public class ConnectionTest {
     static final String USER = "ebsoft";
     static final String PASS = "ebsoft";
 
-    public Connection getConnection() throws Exception{
+    public static Connection getConnection() throws Exception{
 
         Connection conn = null;
         Statement stmt = null;
