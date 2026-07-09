@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--이 XML이 어떤 자바 인터페이스와 짝인지 지정. BoardMapper 인터페이스의 풀 경로를 그대로 적음 -->
+<mapper namespace="com.study.board.BoardMapper">
+  <!-- 게시판 생성 -->
+  <!-- useGeneratedKeys="true" DB가 자동 생성한 키(AUTO_INCREMENT 값)를 가져오기 -->
+  <!-- keyProperty="id" 가져온 그 값을 파라미터로 넘긴 객체의 id 필드에 넣어주기 -->
+  <insert id="insertBoard" parameterType="com.study.board.BoardEntity"
+    useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO Board (category_id, title, writer, content, password, view_count, created_at)
+    VALUES (#{categoryId}, #{title}, #{writer}, #{content}, #{password}, #{viewCount}, #{createdAt})
+  </insert>
+</mapper>

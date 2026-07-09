@@ -31,6 +31,7 @@ CREATE TABLE `Board`
     `id`          BIGINT       NOT NULL AUTO_INCREMENT,
     `category_id` INT          NOT NULL,
     `title`       VARCHAR(100) NOT NULL,
+    `writer`      VARCHAR(50)  NOT NULL,
     `content`     TEXT         NOT NULL,
     `password`    VARCHAR(50)  NOT NULL,
     `view_count`  INT          NOT NULL DEFAULT 0,
