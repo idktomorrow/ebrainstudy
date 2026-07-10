@@ -24,4 +24,7 @@ public interface BoardMapper {
   //게시물 수정
   void updateBoard(BoardEntity board);
 
+  //게시물 삭제
+  void deleteBoard(Long id);
+
 }

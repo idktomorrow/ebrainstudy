@@ -57,4 +57,10 @@
         updated_at = #{updatedAt}
     WHERE id = #{id}
   </update>
+
+  <!-- 게시글 삭제 -->
+  <delete id="deleteBoard">
+    DELETE FROM Board
+    WHERE id = #{id}
+  </delete>
 </mapper>
