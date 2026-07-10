@@ -38,5 +38,22 @@ public class BoardService {
     return boardConverter.toResponse(board);
   }
 
+  public BoardResponse updateBoard(Long id, BoardUpdateRequest request) {
+    BoardEntity board = boardMapper.selectBoardDetail(id);
+
+    // 비밀번호 검증
+    if (!board.getPassword().equals(request.password())) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    }
+
+    //바꿀 부분 덮어쓰기
+    board.setCategoryId(request.categoryId());
+    board.setTitle(request.title());
+    board.setContent(request.content());
+    board.setUpdatedAt(LocalDateTime.now());
+
+    boardMapper.updateBoard(board);
+    return boardConverter.toResponse(board);
+  }
 
 }
