@@ -1,5 +1,8 @@
 package com.study.board;
 
+import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +20,16 @@ public class BoardController {
   @PostMapping("/api/boards")
   public BoardResponse createBoard(@RequestBody BoardCreateRequest request) {
     return boardService.createBoard(request);
+  }
+
+  @GetMapping("/api/boards")
+  public List<BoardResponse> getBoardList() {
+    return boardService.getBoardList();
+  }
+
+  @GetMapping("/api/boards/{id}")
+  public BoardResponse getBoardDetail(@PathVariable Long id) {
+    return boardService.getBoardDetail(id);
   }
 
 }
