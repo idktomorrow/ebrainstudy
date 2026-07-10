@@ -47,4 +47,14 @@
     SET view_count = view_count + 1
     WHERE id = #{id}
   </update>
+
+  <!-- 게시글 수정 (Password는 검증용) -->
+  <update id="updateBoard" parameterType="com.study.board.BoardEntity">
+    UPDATE Board
+    SET category_id = #{categoryId},
+        title = #{title},
+        content = #{content},
+        updated_at = #{updatedAt}
+    WHERE id = #{id}
+  </update>
 </mapper>

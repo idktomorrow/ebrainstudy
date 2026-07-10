@@ -21,4 +21,7 @@ public interface BoardMapper {
   //게시물 조회수 증가
   void increaseViewCount(Long id);
 
+  //게시물 수정
+  void updateBoard(BoardEntity board);
+
 }
