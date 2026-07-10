@@ -56,4 +56,14 @@ public class BoardService {
     return boardConverter.toResponse(board);
   }
 
+  public void deleteBoard(Long id, String password) {
+    BoardEntity board = boardMapper.selectBoardDetail(id);
+    // 비밀번호 검증
+    if (!board.getPassword().equals(password)) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    }
+
+    boardMapper.deleteBoard(id);
+  }
+
 }
