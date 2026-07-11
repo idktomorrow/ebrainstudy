@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS `Comment`;
+DROP TABLE IF EXISTS `comment`;
 
-CREATE TABLE `Comment`
+CREATE TABLE `comment`
 (
     `id`         INT         NOT NULL AUTO_INCREMENT,
     `board_id`   BIGINT      NOT NULL,
@@ -10,9 +10,9 @@ CREATE TABLE `Comment`
     PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `Files`;
+DROP TABLE IF EXISTS `files`;
 
-CREATE TABLE `Files`
+CREATE TABLE `files`
 (
     `id`          INT          NOT NULL AUTO_INCREMENT,
     `board_id`    BIGINT       NOT NULL,
@@ -24,9 +24,9 @@ CREATE TABLE `Files`
     PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `Board`;
+DROP TABLE IF EXISTS `board`;
 
-CREATE TABLE `Board`
+CREATE TABLE `board`
 (
     `id`          BIGINT       NOT NULL AUTO_INCREMENT,
     `category_id` INT          NOT NULL,
@@ -40,23 +40,23 @@ CREATE TABLE `Board`
     PRIMARY KEY (`id`)
 );
 
-DROP TABLE IF EXISTS `Category`;
+DROP TABLE IF EXISTS `category`;
 
-CREATE TABLE `Category`
+CREATE TABLE `category`
 (
     `id`   INT         NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(50) NOT NULL,
     PRIMARY KEY (`id`)
 );
 
-ALTER TABLE `Comment`
-    ADD CONSTRAINT `FK_Board_TO_Comment_1` FOREIGN KEY (`board_id`)
-        REFERENCES `Board` (`id`) ON DELETE CASCADE;
+ALTER TABLE `comment`
+    ADD CONSTRAINT `FK_board_TO_comment_1` FOREIGN KEY (`board_id`)
+        REFERENCES `board` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `Files`
-    ADD CONSTRAINT `FK_Board_TO_Files_1` FOREIGN KEY (`board_id`)
-        REFERENCES `Board` (`id`) ON DELETE CASCADE;
+ALTER TABLE `files`
+    ADD CONSTRAINT `FK_board_TO_files_1` FOREIGN KEY (`board_id`)
+        REFERENCES `board` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `Board`
-    ADD CONSTRAINT `FK_Category_TO_Board_1` FOREIGN KEY (`category_id`)
-        REFERENCES `Category` (`id`);
+ALTER TABLE `board`
+    ADD CONSTRAINT `FK_category_TO_board_1` FOREIGN KEY (`category_id`)
+        REFERENCES `category` (`id`);

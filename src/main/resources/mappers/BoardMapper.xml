@@ -8,7 +8,7 @@
   <!-- keyProperty="id" 가져온 그 값을 파라미터로 넘긴 객체의 id 필드에 넣어주기 -->
   <insert id="insertBoard" parameterType="com.study.board.BoardEntity"
     useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO Board (category_id, title, writer, content, password, view_count, created_at)
+    INSERT INTO board (category_id, title, writer, content, password, view_count, created_at)
     VALUES (#{categoryId}, #{title}, #{writer}, #{content}, #{password}, #{viewCount}, #{createdAt})
   </insert>
 
@@ -22,7 +22,7 @@
            view_count,
            created_at,
            updated_at
-    FROM Board
+    FROM board
     ORDER BY id DESC
   </select>
 
@@ -37,20 +37,20 @@
            view_count,
            created_at,
            updated_at
-    FROM Board
+    FROM board
     WHERE id = #{id}
   </select>
 
   <!-- 조회수 카운트 1 증가 -->
   <update id="increaseViewCount">
-    UPDATE Board
+    UPDATE board
     SET view_count = view_count + 1
     WHERE id = #{id}
   </update>
 
   <!-- 게시글 수정 (Password는 검증용) -->
   <update id="updateBoard" parameterType="com.study.board.BoardEntity">
-    UPDATE Board
+    UPDATE board
     SET category_id = #{categoryId},
         title = #{title},
         content = #{content},
@@ -60,7 +60,7 @@
 
   <!-- 게시글 삭제 -->
   <delete id="deleteBoard">
-    DELETE FROM Board
+    DELETE FROM board
     WHERE id = #{id}
   </delete>
 </mapper>

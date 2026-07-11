@@ -6,7 +6,7 @@
   <!-- 카테고리 전체 목록 조회 -->
   <select id="getCategories" resultType="com.study.category.CategoryEntity">
     SELECT id, name
-    FROM Category
+    FROM category
   </select>
 <!--HTML/XML은 연 태그는 반드시 닫아야 하는 규칙 -->
 </mapper>
