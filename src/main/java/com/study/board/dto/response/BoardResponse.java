@@ -1,4 +1,4 @@
-package com.study.board;
+package com.study.board.dto.response;
 
 import java.time.LocalDateTime;
 

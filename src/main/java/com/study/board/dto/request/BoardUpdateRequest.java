@@ -1,4 +1,4 @@
-package com.study.board;
+package com.study.board.dto.request;
 
 /**
  * 게시글 수정 요청 DTO

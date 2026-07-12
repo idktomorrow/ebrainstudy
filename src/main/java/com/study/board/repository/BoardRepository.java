@@ -1,5 +1,6 @@
-package com.study.board;
+package com.study.board.repository;
 
+import com.study.board.entity.BoardEntity;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -7,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * Board 테이블 접근을 위한 MyBatis 매퍼
  */
 @Mapper
-public interface BoardMapper {
+public interface BoardRepository {
 
   //게시물 등록
   void insertBoard(BoardEntity board);

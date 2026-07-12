@@ -1,4 +1,4 @@
-package com.study.board;
+package com.study.board.dto.request;
 
 /**
  * 게시판 생성 요청 DTO
