@@ -1,4 +1,4 @@
-package com.study.category;
+package com.study.category.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

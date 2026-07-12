@@ -1,5 +1,9 @@
-package com.study.board;
+package com.study.board.controller;
 
+import com.study.board.dto.request.BoardCreateRequest;
+import com.study.board.dto.request.BoardUpdateRequest;
+import com.study.board.dto.response.BoardResponse;
+import com.study.board.service.BoardService;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.study.board;
+package com.study.board.entity;
 
 import java.time.LocalDateTime;
 import lombok.Getter;
