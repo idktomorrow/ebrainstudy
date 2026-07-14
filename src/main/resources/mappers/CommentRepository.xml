@@ -11,4 +11,12 @@
     INSERT INTO comment (board_id, writer, content, created_at)
     VALUES (#{boardId}, #{writer}, #{content}, #{createdAt})
   </insert>
+
+  <!-- 게시글별 댓글 목록 조회 (오래된 순 - 최신 댓글이 하단에 오도록) -->
+  <select id="selectCommentsByBoardId" resultType="com.study.comment.entity.CommentEntity">
+    SELECT id, board_id, writer, content, created_at
+    FROM comment
+    WHERE board_id = #{boardId}
+    ORDER BY id ASC
+  </select>
 </mapper>

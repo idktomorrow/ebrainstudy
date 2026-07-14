@@ -6,6 +6,7 @@ import com.study.comment.entity.CommentEntity;
 import com.study.comment.mapper.CommentMapper;
 import com.study.comment.repository.CommentRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,6 +29,12 @@ public class CommentService {
     comment.setCreatedAt(LocalDateTime.now());
     commentRepository.insertComment(comment);                 // Insert 실행
     return commentMapper.toResponse(comment);                 // 엔티티 -> 응답
+  }
+
+  public List<CommentResponse> getComments(Long boardId) {
+    return commentRepository.selectCommentsByBoardId(boardId).stream()
+        .map(commentMapper::toResponse)
+        .toList();
   }
 
 }
