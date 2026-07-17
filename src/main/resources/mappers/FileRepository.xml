@@ -25,4 +25,10 @@
     FROM files
     WHERE id = #{id}
   </select>
+
+  <!-- 파일 삭제 -->
+  <delete id="deleteFile" >
+    DELETE FROM files
+    WHERE id = #{id}
+  </delete>
 </mapper>

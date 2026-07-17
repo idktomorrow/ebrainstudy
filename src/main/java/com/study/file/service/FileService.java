@@ -103,4 +103,12 @@ public class FileService {
     return new UrlResource(filePath.toUri());
   }
 
+  // 파일 삭제
+  public void deleteFile(Integer id) throws IOException{
+    FileEntity file = fileRepository.selectFileById(id);
+    Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
+    fileRepository.deleteFile(id); // DB에서 삭제
+    Files.deleteIfExists(filePath); // 디스크에서 삭제
+  }
+
 }
