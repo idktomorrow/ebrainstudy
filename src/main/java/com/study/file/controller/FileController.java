@@ -11,6 +11,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +45,7 @@ public class FileController {
     return fileService.getFilesByBoardId(boardId);
   }
 
+  // 파일 다운로드
   @GetMapping("/api/files/{id}/download")
   public ResponseEntity<Resource> downloadFile(@PathVariable Integer id) throws IOException {
     // 장부(DB)에서 파일 정보 조회
@@ -61,5 +63,11 @@ public class FileController {
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(resource);
+  }
+
+  // 파일 삭제
+  @DeleteMapping("/api/files/{id}")
+  public void deleteFile(@PathVariable Integer id) throws IOException {
+    fileService.deleteFile(id);
   }
 }

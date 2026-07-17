@@ -19,4 +19,7 @@ public interface FileRepository {
   //파일 id로 상세 조회
   FileEntity selectFileById(Integer id);
 
+  //파일 삭제
+  void deleteFile(Integer id);
+
 }
