@@ -4,6 +4,7 @@ import com.study.board.dto.request.BoardCreateRequest;
 import com.study.board.dto.request.BoardUpdateRequest;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.service.BoardService;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class BoardController {
   }
 
   @PostMapping("/api/boards")
-  public BoardResponse createBoard(@RequestBody BoardCreateRequest request) {
+  public BoardResponse createBoard(@Valid @RequestBody BoardCreateRequest request) {
     return boardService.createBoard(request);
   }
 
@@ -40,7 +41,7 @@ public class BoardController {
   }
 
   @PutMapping("/api/boards/{id}")
-  public BoardResponse updateBoard(@PathVariable Long id, @RequestBody BoardUpdateRequest request) {
+  public BoardResponse updateBoard(@PathVariable Long id, @Valid @RequestBody BoardUpdateRequest request) {
     return boardService.updateBoard(id, request);
   }
 

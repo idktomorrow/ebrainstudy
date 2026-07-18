@@ -3,6 +3,7 @@ package com.study.comment.controller;
 import com.study.comment.dto.request.CommentCreateRequest;
 import com.study.comment.dto.response.CommentResponse;
 import com.study.comment.service.CommentService;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +24,7 @@ public class CommentController {
   }
 
   @PostMapping("/api/boards/{boardId}/comments")
-  public CommentResponse createComment(@PathVariable Long boardId, @RequestBody CommentCreateRequest request) {
+  public CommentResponse createComment(@PathVariable Long boardId, @Valid @RequestBody CommentCreateRequest request) {
     return commentService.createComment(boardId, request);
   }
 
