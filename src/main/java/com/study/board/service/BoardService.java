@@ -2,6 +2,7 @@ package com.study.board.service;
 
 import com.study.board.dto.request.BoardCreateRequest;
 import com.study.board.dto.request.BoardUpdateRequest;
+import com.study.board.dto.request.PasswordCheckRequest;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.entity.BoardEntity;
 import com.study.board.mapper.BoardMapper;
@@ -60,6 +61,14 @@ public class BoardService {
 
     boardRepository.updateBoard(board);
     return boardMapper.toResponse(board);
+  }
+
+  public void checkPassword(Long id, PasswordCheckRequest request) {
+    BoardEntity board = boardRepository.selectBoardDetail(id);
+    // 비밀번호 검증
+    if (!board.getPassword().equals(request.password())) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    }
   }
 
   public void deleteBoard(Long id, String password) {
