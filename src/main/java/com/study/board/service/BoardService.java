@@ -70,11 +70,11 @@ public class BoardService {
     return boardMapper.toResponse(board);
   }
 
-  // 요청에 삭제할 파일 id 목록 + 새로 추가할 파일을 따로 받아야 할지?
+  // 요청에 삭제할 파일 id 목록 + 새로 추가할 파일을 따로 받아야 할지? << 채택
   // 아니면 최종 파일 목록을 통째로 받아서 서버가 비교해야 할지
-  // 저장해야만 반영 / 취소 시 미반영이 프론트가 저장 전엔 API를 안 부르는 것만으로 충분한지?
+  // 저장해야만 반영 / 취소 시 미반영이 프론트가 저장 전엔 API를 안 부르는 것만으로 충분한지? << 채택
   // 아니면 백엔드가 임시 변경사항을 잠깐 들고 있어야 하는 구조가 필요한지
-  public BoardResponse updateBoard(Long id, BoardUpdateRequest request) {
+  public BoardResponse updateBoard(Long id, BoardUpdateRequest request, List<MultipartFile> files) throws IOException {
     BoardEntity board = boardRepository.selectBoardDetail(id);
 
     // 비밀번호 검증
@@ -87,8 +87,19 @@ public class BoardService {
     board.setTitle(request.title());
     board.setContent(request.content());
     board.setUpdatedAt(LocalDateTime.now());
-
     boardRepository.updateBoard(board);
+
+    // 지울 파일이 있으면 하나씩 삭제
+    if (request.deleteFileIds() != null) {
+      for (Integer fileId : request.deleteFileIds()) {
+        fileService.deleteFile(fileId);
+      }
+    }
+
+    // 새로 추가할 파일이 있으면 업로드
+    if (files != null && !files.isEmpty()) {
+      fileService.uploadFiles(id, files);
+    }
     return boardMapper.toResponse(board);
   }
 

@@ -62,9 +62,12 @@ public class BoardController {
   }
 
   @PutMapping("/api/boards/{id}")
-  public BoardResponse updateBoard(@PathVariable Long id,
-      @Valid @RequestBody BoardUpdateRequest request) {
-    return boardService.updateBoard(id, request);
+  public BoardResponse updateBoard(
+      @PathVariable Long id,
+      @RequestPart("request") @Valid BoardUpdateRequest request,
+      @RequestParam(value = "files", required = false) List<MultipartFile> files
+      ) throws IOException {
+    return boardService.updateBoard(id, request, files);
   }
 
   @PostMapping("/api/boards/{id}/password-check")
