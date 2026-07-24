@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 게시판 컨트롤러
@@ -33,8 +35,11 @@ public class BoardController {
   }
 
   @PostMapping("/api/boards")
-  public BoardResponse createBoard(@Valid @RequestBody BoardCreateRequest request) {
-    return boardService.createBoard(request);
+  public BoardResponse createBoard(
+      @RequestPart("request") @Valid BoardCreateRequest request,  //JSON -> BoardCreateRequest
+      @RequestParam(value = "files", required = false) List<MultipartFile> files
+  ) throws IOException {
+    return boardService.createBoard(request, files);
   }
 
   @GetMapping("/api/boards")

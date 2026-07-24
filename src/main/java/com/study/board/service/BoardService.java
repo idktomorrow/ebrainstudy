@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 게시판 비즈니스 로직
@@ -32,11 +33,17 @@ public class BoardService {
     this.fileService = fileService;
   }
 
-  public BoardResponse createBoard(BoardCreateRequest request) {
+  public BoardResponse createBoard(BoardCreateRequest request, List<MultipartFile> files) throws IOException {
     BoardEntity board = boardMapper.toEntity(request);     // 요청 -> 엔티티
     board.setViewCount(0);
     board.setCreatedAt(LocalDateTime.now());
     boardRepository.insertBoard(board);                    // Insert 실행
+
+    // 파일은 옵션이라, 넘어온 게 있을 때만 업로드
+    if (files != null && !files.isEmpty()) {
+      fileService.uploadFiles(board.getId(), files);
+    }
+
     return boardMapper.toResponse(board);                  // 엔티티 -> 응답
   }
 
@@ -63,6 +70,10 @@ public class BoardService {
     return boardMapper.toResponse(board);
   }
 
+  // 요청에 삭제할 파일 id 목록 + 새로 추가할 파일을 따로 받아야 할지?
+  // 아니면 최종 파일 목록을 통째로 받아서 서버가 비교해야 할지
+  // 저장해야만 반영 / 취소 시 미반영이 프론트가 저장 전엔 API를 안 부르는 것만으로 충분한지?
+  // 아니면 백엔드가 임시 변경사항을 잠깐 들고 있어야 하는 구조가 필요한지
   public BoardResponse updateBoard(Long id, BoardUpdateRequest request) {
     BoardEntity board = boardRepository.selectBoardDetail(id);
 
