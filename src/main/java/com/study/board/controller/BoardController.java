@@ -8,6 +8,7 @@ import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.service.BoardService;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -68,7 +69,7 @@ public class BoardController {
   }
 
   @DeleteMapping("/api/boards/{id}")
-  public void deleteBoard(@PathVariable Long id, @RequestParam String password) {
+  public void deleteBoard(@PathVariable Long id, @RequestParam String password) throws IOException {
     boardService.deleteBoard(id, password);
   }
 

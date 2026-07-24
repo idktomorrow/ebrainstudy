@@ -9,6 +9,8 @@ import com.study.board.dto.response.BoardResponse;
 import com.study.board.entity.BoardEntity;
 import com.study.board.mapper.BoardMapper;
 import com.study.board.repository.BoardRepository;
+import com.study.file.service.FileService;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,10 +24,12 @@ public class BoardService {
 
   private final BoardRepository boardRepository;
   private final BoardMapper boardMapper;
+  private final FileService fileService;
 
-  public BoardService(BoardRepository boardRepository, BoardMapper boardMapper) {
+  public BoardService(BoardRepository boardRepository, BoardMapper boardMapper, FileService fileService) {
     this.boardRepository = boardRepository;
     this.boardMapper = boardMapper;
+    this.fileService = fileService;
   }
 
   public BoardResponse createBoard(BoardCreateRequest request) {
@@ -85,14 +89,15 @@ public class BoardService {
     }
   }
 
-  public void deleteBoard(Long id, String password) {
+  public void deleteBoard(Long id, String password) throws IOException {
     BoardEntity board = boardRepository.selectBoardDetail(id);
     // 비밀번호 검증
     if (!board.getPassword().equals(password)) {
       throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
-    boardRepository.deleteBoard(id);
+    fileService.deleteFilesFromDisk(id);   // 먼저: 디스크 파일 정리
+    boardRepository.deleteBoard(id);       // 그다음: DB에서 게시글 삭제
   }
 
 }
