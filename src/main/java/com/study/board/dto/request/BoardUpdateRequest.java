@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 /**
  * 게시글 수정 요청 DTO
@@ -27,7 +28,10 @@ public record BoardUpdateRequest(
         regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
         message = "비밀번호는 영문/숫자/특수문자를 모두 포함해야 합니다."
     )
-    String password
+    String password,
+
+    // 수정 시 지울 첨부파일 id 목록 (없으면 null)
+    List<Integer> deleteFileIds
 ) {
 
 }

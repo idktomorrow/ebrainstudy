@@ -111,4 +111,14 @@ public class FileService {
     Files.deleteIfExists(filePath); // 디스크에서 삭제
   }
 
+  // 게시글 삭제 시 호출됨. 해당 게시글의 파일들을 디스크에서만 삭제 (DB는 CASCADE로 이미 처리됨)
+  public void deleteFilesFromDisk(Long boardId) throws IOException {
+    // 삭제되기 전에 파일 목록을 미리 조회해둠
+    List<FileEntity> files = fileRepository.selectFilesByBoardId(boardId);
+    // 목록을 돌면서 디스크에서 하나씩 삭제
+    for (FileEntity file : files) {
+      Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
+      Files.deleteIfExists(filePath);
+    }
+  }
 }

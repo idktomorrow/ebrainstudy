@@ -9,10 +9,13 @@ import com.study.board.dto.response.BoardResponse;
 import com.study.board.entity.BoardEntity;
 import com.study.board.mapper.BoardMapper;
 import com.study.board.repository.BoardRepository;
+import com.study.file.service.FileService;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 게시판 비즈니스 로직
@@ -22,17 +25,25 @@ public class BoardService {
 
   private final BoardRepository boardRepository;
   private final BoardMapper boardMapper;
+  private final FileService fileService;
 
-  public BoardService(BoardRepository boardRepository, BoardMapper boardMapper) {
+  public BoardService(BoardRepository boardRepository, BoardMapper boardMapper, FileService fileService) {
     this.boardRepository = boardRepository;
     this.boardMapper = boardMapper;
+    this.fileService = fileService;
   }
 
-  public BoardResponse createBoard(BoardCreateRequest request) {
+  public BoardResponse createBoard(BoardCreateRequest request, List<MultipartFile> files) throws IOException {
     BoardEntity board = boardMapper.toEntity(request);     // 요청 -> 엔티티
     board.setViewCount(0);
     board.setCreatedAt(LocalDateTime.now());
     boardRepository.insertBoard(board);                    // Insert 실행
+
+    // 파일은 옵션이라, 넘어온 게 있을 때만 업로드
+    if (files != null && !files.isEmpty()) {
+      fileService.uploadFiles(board.getId(), files);
+    }
+
     return boardMapper.toResponse(board);                  // 엔티티 -> 응답
   }
 
@@ -59,7 +70,11 @@ public class BoardService {
     return boardMapper.toResponse(board);
   }
 
-  public BoardResponse updateBoard(Long id, BoardUpdateRequest request) {
+  // 요청에 삭제할 파일 id 목록 + 새로 추가할 파일을 따로 받아야 할지? << 채택
+  // 아니면 최종 파일 목록을 통째로 받아서 서버가 비교해야 할지
+  // 저장해야만 반영 / 취소 시 미반영이 프론트가 저장 전엔 API를 안 부르는 것만으로 충분한지? << 채택
+  // 아니면 백엔드가 임시 변경사항을 잠깐 들고 있어야 하는 구조가 필요한지
+  public BoardResponse updateBoard(Long id, BoardUpdateRequest request, List<MultipartFile> files) throws IOException {
     BoardEntity board = boardRepository.selectBoardDetail(id);
 
     // 비밀번호 검증
@@ -72,8 +87,19 @@ public class BoardService {
     board.setTitle(request.title());
     board.setContent(request.content());
     board.setUpdatedAt(LocalDateTime.now());
-
     boardRepository.updateBoard(board);
+
+    // 지울 파일이 있으면 하나씩 삭제
+    if (request.deleteFileIds() != null) {
+      for (Integer fileId : request.deleteFileIds()) {
+        fileService.deleteFile(fileId);
+      }
+    }
+
+    // 새로 추가할 파일이 있으면 업로드
+    if (files != null && !files.isEmpty()) {
+      fileService.uploadFiles(id, files);
+    }
     return boardMapper.toResponse(board);
   }
 
@@ -85,14 +111,15 @@ public class BoardService {
     }
   }
 
-  public void deleteBoard(Long id, String password) {
+  public void deleteBoard(Long id, String password) throws IOException {
     BoardEntity board = boardRepository.selectBoardDetail(id);
     // 비밀번호 검증
     if (!board.getPassword().equals(password)) {
       throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
-    boardRepository.deleteBoard(id);
+    fileService.deleteFilesFromDisk(id);   // 먼저: 디스크 파일 정리
+    boardRepository.deleteBoard(id);       // 그다음: DB에서 게시글 삭제
   }
 
 }

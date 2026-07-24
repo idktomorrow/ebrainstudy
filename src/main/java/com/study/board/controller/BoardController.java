@@ -8,6 +8,7 @@ import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.service.BoardService;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 게시판 컨트롤러
@@ -32,8 +35,11 @@ public class BoardController {
   }
 
   @PostMapping("/api/boards")
-  public BoardResponse createBoard(@Valid @RequestBody BoardCreateRequest request) {
-    return boardService.createBoard(request);
+  public BoardResponse createBoard(
+      @RequestPart("request") @Valid BoardCreateRequest request,  //JSON -> BoardCreateRequest
+      @RequestParam(value = "files", required = false) List<MultipartFile> files
+  ) throws IOException {
+    return boardService.createBoard(request, files);
   }
 
   @GetMapping("/api/boards")
@@ -56,9 +62,12 @@ public class BoardController {
   }
 
   @PutMapping("/api/boards/{id}")
-  public BoardResponse updateBoard(@PathVariable Long id,
-      @Valid @RequestBody BoardUpdateRequest request) {
-    return boardService.updateBoard(id, request);
+  public BoardResponse updateBoard(
+      @PathVariable Long id,
+      @RequestPart("request") @Valid BoardUpdateRequest request,
+      @RequestParam(value = "files", required = false) List<MultipartFile> files
+      ) throws IOException {
+    return boardService.updateBoard(id, request, files);
   }
 
   @PostMapping("/api/boards/{id}/password-check")
@@ -68,7 +77,7 @@ public class BoardController {
   }
 
   @DeleteMapping("/api/boards/{id}")
-  public void deleteBoard(@PathVariable Long id, @RequestParam String password) {
+  public void deleteBoard(@PathVariable Long id, @RequestParam String password) throws IOException {
     boardService.deleteBoard(id, password);
   }
 
