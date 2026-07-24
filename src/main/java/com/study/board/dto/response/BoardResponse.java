@@ -14,7 +14,8 @@ public record BoardResponse(
     String content,
     Integer viewCount,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    Boolean hasAttachment
 ) {
 
 }

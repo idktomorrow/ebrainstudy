@@ -1,11 +1,14 @@
 package com.study.board.controller;
 
 import com.study.board.dto.request.BoardCreateRequest;
+import com.study.board.dto.request.BoardSearchCondition;
 import com.study.board.dto.request.BoardUpdateRequest;
 import com.study.board.dto.request.PasswordCheckRequest;
+import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.service.BoardService;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class BoardController {
+
   private final BoardService boardService;
+
   public BoardController(BoardService boardService) {
     this.boardService = boardService;
   }
@@ -32,8 +37,17 @@ public class BoardController {
   }
 
   @GetMapping("/api/boards")
-  public List<BoardResponse> getBoardList() {
-    return boardService.getBoardList();
+  public BoardListResponse getBoardList(
+      @RequestParam(required = false) Integer categoryId,
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) LocalDate startDate,
+      @RequestParam(required = false) LocalDate endDate,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    BoardSearchCondition condition = new BoardSearchCondition(categoryId, keyword, startDate,
+        endDate, page, size);
+    return boardService.getBoardList(condition);
   }
 
   @GetMapping("/api/boards/{id}")
@@ -42,12 +56,14 @@ public class BoardController {
   }
 
   @PutMapping("/api/boards/{id}")
-  public BoardResponse updateBoard(@PathVariable Long id, @Valid @RequestBody BoardUpdateRequest request) {
+  public BoardResponse updateBoard(@PathVariable Long id,
+      @Valid @RequestBody BoardUpdateRequest request) {
     return boardService.updateBoard(id, request);
   }
 
   @PostMapping("/api/boards/{id}/password-check")
-  public void checkPassword(@PathVariable Long id, @Valid @RequestBody PasswordCheckRequest request) {
+  public void checkPassword(@PathVariable Long id,
+      @Valid @RequestBody PasswordCheckRequest request) {
     boardService.checkPassword(id, request);
   }
 

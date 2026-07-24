@@ -19,4 +19,6 @@ public class BoardEntity {
   private Integer viewCount;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+  //첨부파일 첨부 여부
+  private Boolean hasAttachment;
 }

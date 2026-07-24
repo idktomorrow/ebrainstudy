@@ -1,12 +1,15 @@
 package com.study.board.service;
 
 import com.study.board.dto.request.BoardCreateRequest;
+import com.study.board.dto.request.BoardSearchCondition;
 import com.study.board.dto.request.BoardUpdateRequest;
 import com.study.board.dto.request.PasswordCheckRequest;
+import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.entity.BoardEntity;
 import com.study.board.mapper.BoardMapper;
 import com.study.board.repository.BoardRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -33,10 +36,21 @@ public class BoardService {
     return boardMapper.toResponse(board);                  // 엔티티 -> 응답
   }
 
-  public List<BoardResponse> getBoardList() {
-    return boardRepository.selectBoardList().stream()
+  public BoardListResponse getBoardList(BoardSearchCondition condition) {
+    // 등록일 종료값이 없으면 오늘, 시작값이 없으면 종료값 기준 1년 전 (요구사항: 디폴트 값이 최근 1년)
+    LocalDate resolvedEndDate = (condition.endDate() != null) ? condition.endDate() : LocalDate.now();
+    // 종료일을 먼저 구해놔야 시작일을 구할 수 있음
+    LocalDate resolvedStartDate = (condition.startDate() != null) ? condition.startDate() : resolvedEndDate.minusYears(1);
+
+    BoardSearchCondition resolvedCondition = new BoardSearchCondition(
+        condition.categoryId(), condition.keyword(), resolvedStartDate, resolvedEndDate, condition.page(), condition.size()
+    );
+
+    List<BoardResponse> boards = boardRepository.selectBoardList(resolvedCondition, resolvedCondition.offset()).stream()
         .map(boardMapper::toResponse)
         .toList();
+    long totalCount = boardRepository.countBoardList(resolvedCondition);
+    return new BoardListResponse(boards, totalCount);
   }
 
   public BoardResponse getBoardDetail(Long id) {

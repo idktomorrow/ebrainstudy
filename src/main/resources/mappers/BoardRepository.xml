@@ -12,18 +12,62 @@
     VALUES (#{categoryId}, #{title}, #{writer}, #{content}, #{password}, #{viewCount}, #{createdAt})
   </insert>
 
-  <!-- 게시글 목록 조회(내림차순 정렬) -->
+  <!-- 검색 조건에 맞는 게시글 목록 조회 (페이징 적용) -->
   <select id="selectBoardList" resultType="com.study.board.entity.BoardEntity">
-    SELECT id,
-           category_id,
-           title,
-           writer,
-           content,
-           view_count,
-           created_at,
-           updated_at
-    FROM board
-    ORDER BY id DESC
+    SELECT b.id,
+    b.category_id,
+    b.title,
+    b.writer,
+    b.content,
+    b.view_count,
+    b.created_at,
+    b.updated_at,
+    EXISTS (SELECT 1 FROM files f WHERE f.board_id = b.id) AS has_attachment
+    FROM board b
+    <where>
+      <if test="condition.categoryId != null">
+        AND b.category_id = #{condition.categoryId}
+      </if>
+      <if test="condition.keyword != null and condition.keyword != ''">
+        AND (
+        b.title LIKE CONCAT('%', #{condition.keyword}, '%')
+        OR b.writer LIKE CONCAT('%', #{condition.keyword}, '%')
+        OR b.content LIKE CONCAT('%', #{condition.keyword}, '%')
+        )
+      </if>
+      <if test="condition.startDate != null">
+        AND b.created_at &gt;= #{condition.startDate}
+      </if>
+      <if test="condition.endDate != null">
+        AND b.created_at &lt; DATE_ADD(#{condition.endDate}, INTERVAL 1 DAY)
+      </if>
+    </where>
+    ORDER BY b.created_at DESC, b.id DESC
+    LIMIT #{condition.size} OFFSET #{offset}
+  </select>
+
+  <!-- 검색 조건에 맞는 게시글 총 건수 -->
+  <select id="countBoardList" resultType="long">
+    SELECT COUNT(*)
+    FROM board b
+    <where>
+      <if test="condition.categoryId != null">
+        AND b.category_id = #{condition.categoryId}
+      </if>
+      <if test="condition.keyword != null and condition.keyword != ''">
+        AND (
+        b.title LIKE CONCAT('%', #{condition.keyword}, '%')
+        OR b.writer LIKE CONCAT('%', #{condition.keyword}, '%')
+        OR b.content LIKE CONCAT('%', #{condition.keyword}, '%')
+        )
+      </if>
+      <if test="condition.startDate != null">
+        AND b.created_at &gt;= #{condition.startDate}
+      </if>
+      <if test="condition.endDate != null">
+        AND b.created_at &lt; DATE_ADD(#{condition.endDate}, INTERVAL 1 DAY)
+      </if>
+    </where>
   </select>
 
   <!-- 게시글 상세 조회 -->
