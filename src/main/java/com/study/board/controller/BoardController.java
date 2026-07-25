@@ -8,7 +8,6 @@ import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.service.BoardService;
 import jakarta.validation.Valid;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,7 +37,7 @@ public class BoardController {
   public BoardResponse createBoard(
       @RequestPart("request") @Valid BoardCreateRequest request,  //JSON -> BoardCreateRequest
       @RequestParam(value = "files", required = false) List<MultipartFile> files
-  ) throws IOException {
+  ) {
     return boardService.createBoard(request, files);
   }
 
@@ -66,7 +65,7 @@ public class BoardController {
       @PathVariable Long id,
       @RequestPart("request") @Valid BoardUpdateRequest request,
       @RequestParam(value = "files", required = false) List<MultipartFile> files
-      ) throws IOException {
+      ) {
     return boardService.updateBoard(id, request, files);
   }
 
@@ -77,7 +76,7 @@ public class BoardController {
   }
 
   @DeleteMapping("/api/boards/{id}")
-  public void deleteBoard(@PathVariable Long id, @RequestParam String password) throws IOException {
+  public void deleteBoard(@PathVariable Long id, @RequestParam String password) {
     boardService.deleteBoard(id, password);
   }
 

@@ -7,10 +7,11 @@ import com.study.board.dto.request.PasswordCheckRequest;
 import com.study.board.dto.response.BoardListResponse;
 import com.study.board.dto.response.BoardResponse;
 import com.study.board.entity.BoardEntity;
+import com.study.board.exception.BoardErrorCode;
 import com.study.board.mapper.BoardMapper;
 import com.study.board.repository.BoardRepository;
 import com.study.file.service.FileService;
-import java.io.IOException;
+import com.study.global.exception.BusinessException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,11 +34,11 @@ public class BoardService {
     this.fileService = fileService;
   }
 
-  public BoardResponse createBoard(BoardCreateRequest request, List<MultipartFile> files) throws IOException {
+  public BoardResponse createBoard(BoardCreateRequest request, List<MultipartFile> files) {
     BoardEntity board = boardMapper.toEntity(request);     // 요청 -> 엔티티
     board.setViewCount(0);
     board.setCreatedAt(LocalDateTime.now());
-    boardRepository.insertBoard(board);                    // Insert 실행
+    boardRepository.insertBoard(board);                    // Insert 실행 (이 순간 board.getId()에 생성된 id가 채워짐)
 
     // 파일은 옵션이라, 넘어온 게 있을 때만 업로드
     if (files != null && !files.isEmpty()) {
@@ -66,7 +67,7 @@ public class BoardService {
 
   public BoardResponse getBoardDetail(Long id) {
     boardRepository.increaseViewCount(id);
-    BoardEntity board = boardRepository.selectBoardDetail(id);
+    BoardEntity board = findBoardOrThrow(id);
     return boardMapper.toResponse(board);
   }
 
@@ -74,12 +75,12 @@ public class BoardService {
   // 아니면 최종 파일 목록을 통째로 받아서 서버가 비교해야 할지
   // 저장해야만 반영 / 취소 시 미반영이 프론트가 저장 전엔 API를 안 부르는 것만으로 충분한지? << 채택
   // 아니면 백엔드가 임시 변경사항을 잠깐 들고 있어야 하는 구조가 필요한지
-  public BoardResponse updateBoard(Long id, BoardUpdateRequest request, List<MultipartFile> files) throws IOException {
-    BoardEntity board = boardRepository.selectBoardDetail(id);
+  public BoardResponse updateBoard(Long id, BoardUpdateRequest request, List<MultipartFile> files) {
+    BoardEntity board = findBoardOrThrow(id);
 
     // 비밀번호 검증
     if (!board.getPassword().equals(request.password())) {
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+      throw new BusinessException(BoardErrorCode.BOARD_PASSWORD_MISMATCH);
     }
 
     //바꿀 부분 덮어쓰기
@@ -104,22 +105,31 @@ public class BoardService {
   }
 
   public void checkPassword(Long id, PasswordCheckRequest request) {
-    BoardEntity board = boardRepository.selectBoardDetail(id);
+    BoardEntity board = findBoardOrThrow(id);
     // 비밀번호 검증
     if (!board.getPassword().equals(request.password())) {
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+      throw new BusinessException(BoardErrorCode.BOARD_PASSWORD_MISMATCH);
     }
   }
 
-  public void deleteBoard(Long id, String password) throws IOException {
-    BoardEntity board = boardRepository.selectBoardDetail(id);
+  public void deleteBoard(Long id, String password) {
+    BoardEntity board = findBoardOrThrow(id);
     // 비밀번호 검증
     if (!board.getPassword().equals(password)) {
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+      throw new BusinessException(BoardErrorCode.BOARD_PASSWORD_MISMATCH);
     }
 
     fileService.deleteFilesFromDisk(id);   // 먼저: 디스크 파일 정리
-    boardRepository.deleteBoard(id);       // 그다음: DB에서 게시글 삭제
+    boardRepository.deleteBoard(id);       // 그다음: DB에서 게시글 삭제 (CASCADE)
+  }
+
+  // 존재하지 않는 게시글이면 BOARD_NOT_FOUND(404)로 응답하기 위한 공통 조회
+  private BoardEntity findBoardOrThrow(Long id) {
+    BoardEntity board = boardRepository.selectBoardDetail(id);
+    if (board == null) {
+      throw new BusinessException(BoardErrorCode.BOARD_NOT_FOUND);
+    }
+    return board;
   }
 
 }

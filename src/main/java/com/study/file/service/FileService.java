@@ -2,8 +2,10 @@ package com.study.file.service;
 
 import com.study.file.dto.response.FileResponse;
 import com.study.file.entity.FileEntity;
+import com.study.file.exception.FileErrorCode;
 import com.study.file.mapper.FileMapper;
 import com.study.file.repository.FileRepository;
+import com.study.global.exception.BusinessException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +39,7 @@ public class FileService {
 
 
   // 첨부 파일 업로드
-  public FileResponse uploadFile(Long boardId, MultipartFile file) throws IOException {
+  public FileResponse uploadFile(Long boardId, MultipartFile file) {
 
     // 사용자가 업로드한 원본 파일 명
     String originName = file.getOriginalFilename();
@@ -46,13 +48,17 @@ public class FileService {
 
     // "./uploads" 문자열을 자바가 다룰 수 있는 경로 객체로 변환
     Path uploadPath = Paths.get(uploadDir);
-    // 업로드 폴더가 없으면 새로 생성, 이미 있으면 그냥 넘어감
-    Files.createDirectories(uploadPath);
     // 업로드 폴더 경로 + 저장할 파일명을 합쳐서 최종 저장 경로 생성
     Path destination = uploadPath.resolve(storedName);
 
-    // 디스크에 파일 바이트 쓰기
-    file.transferTo(destination);
+    try {
+      // 업로드 폴더가 없으면 새로 생성, 이미 있으면 그냥 넘어감
+      Files.createDirectories(uploadPath);
+      // 디스크에 파일 바이트 쓰기
+      file.transferTo(destination);
+    } catch (IOException e) {
+      throw new BusinessException(FileErrorCode.FILE_UPLOAD_FAILED);
+    }
 
     // DB에 파일 정보 저장
     FileEntity fileEntity = new FileEntity();
@@ -69,7 +75,7 @@ public class FileService {
   }
 
   // 첨부 파일 여러 개 업로드
-  public List<FileResponse> uploadFiles(Long boardId, List<MultipartFile> files) throws IOException {
+  public List<FileResponse> uploadFiles(Long boardId, List<MultipartFile> files) {
     // 업로드 결과(응답 DTO)들을 담을 빈 리스트 생성
     List<FileResponse> responses = new ArrayList<>();
     // 받은 파일들을 하나씩 꺼내서
@@ -91,34 +97,48 @@ public class FileService {
   // 파일 id로 상세 조회
   public FileEntity getFileById(Integer id) {
     FileEntity file = fileRepository.selectFileById(id);
-
+    if (file == null) {
+      throw new BusinessException(FileErrorCode.FILE_NOT_FOUND);
+    }
     return file;
   }
 
   // 파일 다운로드
-  public Resource loadAsResource(FileEntity file) throws IOException {
-    // 폴더 경로 + UUID 저장명으로 실제 경로 조립
-    Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
-    // 그 경로를 가리키는 손잡이를 만들어 반환
-    return new UrlResource(filePath.toUri());
+  public Resource loadAsResource(FileEntity file) {
+    try {
+      // 폴더 경로 + UUID 저장명으로 실제 경로 조립
+      Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
+      // 그 경로를 가리키는 손잡이를 만들어 반환
+      return new UrlResource(filePath.toUri());
+    } catch (IOException e) {
+      throw new BusinessException(FileErrorCode.FILE_DOWNLOAD_FAILED);
+    }
   }
 
   // 파일 삭제
-  public void deleteFile(Integer id) throws IOException{
-    FileEntity file = fileRepository.selectFileById(id);
+  public void deleteFile(Integer id) {
+    FileEntity file = getFileById(id); // 없는 파일이면 여기서 FILE_NOT_FOUND
     Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
     fileRepository.deleteFile(id); // DB에서 삭제
-    Files.deleteIfExists(filePath); // 디스크에서 삭제
+    try {
+      Files.deleteIfExists(filePath); // 디스크에서 삭제
+    } catch (IOException e) {
+      throw new BusinessException(FileErrorCode.FILE_DELETE_FAILED);
+    }
   }
 
   // 게시글 삭제 시 호출됨. 해당 게시글의 파일들을 디스크에서만 삭제 (DB는 CASCADE로 이미 처리됨)
-  public void deleteFilesFromDisk(Long boardId) throws IOException {
+  public void deleteFilesFromDisk(Long boardId) {
     // 삭제되기 전에 파일 목록을 미리 조회해둠
     List<FileEntity> files = fileRepository.selectFilesByBoardId(boardId);
     // 목록을 돌면서 디스크에서 하나씩 삭제
     for (FileEntity file : files) {
       Path filePath = Paths.get(file.getFilePath()).resolve(file.getStoredName());
-      Files.deleteIfExists(filePath);
+      try {
+        Files.deleteIfExists(filePath);
+      } catch (IOException e) {
+        throw new BusinessException(FileErrorCode.FILE_DELETE_FAILED);
+      }
     }
   }
 }
