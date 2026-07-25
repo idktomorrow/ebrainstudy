@@ -3,7 +3,6 @@ package com.study.file.controller;
 import com.study.file.dto.response.FileResponse;
 import com.study.file.entity.FileEntity;
 import com.study.file.service.FileService;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.core.io.Resource;
@@ -35,7 +34,7 @@ public class FileController {
   @PostMapping("/api/boards/{boardId}/files")
   public List<FileResponse> uploadFiles(
       @PathVariable Long boardId,
-      @RequestParam("files") List<MultipartFile> files) throws IOException {
+      @RequestParam("files") List<MultipartFile> files) {
     return fileService.uploadFiles(boardId, files);
   }
 
@@ -47,7 +46,7 @@ public class FileController {
 
   // 파일 다운로드
   @GetMapping("/api/files/{id}/download")
-  public ResponseEntity<Resource> downloadFile(@PathVariable Integer id) throws IOException {
+  public ResponseEntity<Resource> downloadFile(@PathVariable Integer id) {
     // 장부(DB)에서 파일 정보 조회
     FileEntity file = fileService.getFileById(id);
     // 디스크의 실제 파일을 가리키는 손잡이 받아오기
@@ -67,7 +66,7 @@ public class FileController {
 
   // 파일 삭제
   @DeleteMapping("/api/files/{id}")
-  public void deleteFile(@PathVariable Integer id) throws IOException {
+  public void deleteFile(@PathVariable Integer id) {
     fileService.deleteFile(id);
   }
 }
