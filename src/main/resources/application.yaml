@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB   # 파일 하나당 최대 용량 (OOM 방지 최소 안전장치)
+      max-request-size: 20MB  # 요청 하나(여러 파일 합산) 최대 용량
   datasource:
     url: jdbc:mysql://localhost:3308/ebrainsoft_study
     username: ebsoft
