@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * 모든 컨트롤러에서 발생하는 예외를 한곳에서 잡아 통일된 응답으로 변환
@@ -41,6 +42,19 @@ public class GlobalExceptionHandler {
         request.getRequestURI(),
         GlobalErrorCode.VALIDATION_FAILED.getMessage(),
         details
+    );
+    return ResponseEntity.status(GlobalErrorCode.VALIDATION_FAILED.getHttpStatus()).body(response);
+  }
+
+  // 경로/쿼리 파라미터 타입이 안 맞을 때 (예: id 자리에 숫자가 아닌 값) - 스프링이 컨트롤러 실행 전에 던지는 예외
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ErrorResponse> handleTypeMismatch(
+      MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+    ErrorResponse response = ErrorResponse.of(
+        GlobalErrorCode.VALIDATION_FAILED,
+        request.getRequestURI(),
+        "요청 파라미터 형식이 올바르지 않습니다.",
+        null
     );
     return ResponseEntity.status(GlobalErrorCode.VALIDATION_FAILED.getHttpStatus()).body(response);
   }
