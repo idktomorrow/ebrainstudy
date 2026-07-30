@@ -76,8 +76,8 @@ public class BoardController {
   }
 
   @DeleteMapping("/api/boards/{id}")
-  public void deleteBoard(@PathVariable Long id, @RequestParam String password) {
-    boardService.deleteBoard(id, password);
+  public void deleteBoard(@PathVariable Long id, @Valid @RequestBody PasswordCheckRequest request) {
+    boardService.deleteBoard(id, request.password());
   }
 
 }
