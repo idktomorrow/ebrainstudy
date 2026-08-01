@@ -1,4 +1,4 @@
-version: "3.8"
+name: ebrainsoft-study
 services:
   mysql:
     image: mysql:8.0
@@ -14,3 +14,10 @@ services:
     command:
       - --character-set-server=UTF8MB4
       - --collation-server=UTF8MB4_UNICODE_CI
+    volumes:
+      - study-db-data:/var/lib/mysql
+
+volumes:
+  study-db-data:
+    external: true
+    name: ebrainsoft-study_study-db-data
