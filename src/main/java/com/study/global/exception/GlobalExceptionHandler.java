@@ -2,6 +2,7 @@ package com.study.global.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +55,19 @@ public class GlobalExceptionHandler {
         GlobalErrorCode.VALIDATION_FAILED,
         request.getRequestURI(),
         "요청 파라미터 형식이 올바르지 않습니다.",
+        null
+    );
+    return ResponseEntity.status(GlobalErrorCode.VALIDATION_FAILED.getHttpStatus()).body(response);
+  }
+
+  // DB 제약조건 위반 (예: 존재하지 않는 게시글 id로 댓글을 달아 외래키 위반) - 도메인별로 미리 막지 못한 경우의 안전망
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+      DataIntegrityViolationException e, HttpServletRequest request) {
+    ErrorResponse response = ErrorResponse.of(
+        GlobalErrorCode.VALIDATION_FAILED,
+        request.getRequestURI(),
+        "요청 데이터가 참조 제약 조건을 위반했습니다 (예: 존재하지 않는 게시글).",
         null
     );
     return ResponseEntity.status(GlobalErrorCode.VALIDATION_FAILED.getHttpStatus()).body(response);
