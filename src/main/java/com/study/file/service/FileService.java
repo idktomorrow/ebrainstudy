@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -24,6 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 public class FileService {
+
+  // 업로드 허용 확장자 (실행파일 등 위험한 확장자 차단)
+  private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+      "jpg", "jpeg", "png", "gif", "pdf", "txt", "hwp", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip"
+  );
 
   // 첨부파일 저장 경로 설정
   @Value("${file.upload-dir}")
@@ -43,6 +49,12 @@ public class FileService {
 
     // 사용자가 업로드한 원본 파일 명
     String originName = file.getOriginalFilename();
+    // 확장자만 뽑아서 허용 목록에 있는지 확인 (디스크에 쓰기 전에 먼저 막음)
+    String extension = originName.substring(originName.lastIndexOf(".") + 1).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.contains(extension)) {
+      throw new BusinessException(FileErrorCode.INVALID_FILE_TYPE);
+    }
+
     // 저장할 파일 명(UUID)
     String storedName = UUID.randomUUID().toString() + "_" + originName;
 
@@ -65,7 +77,7 @@ public class FileService {
     fileEntity.setStoredName(storedName);
     fileEntity.setFilePath(uploadDir);
     fileEntity.setFileSize(file.getSize());
-    fileEntity.setFileFormat(originName.substring(originName.lastIndexOf(".") + 1));
+    fileEntity.setFileFormat(extension);
 
     fileRepository.insertFile(fileEntity);
 
