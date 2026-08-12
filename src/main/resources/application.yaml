@@ -18,3 +18,8 @@ mybatis:
 # 첨부 파일 저장 경로 설정
 file:
   upload-dir: ./uploads
+
+management:
+  endpoint:
+    health:
+      show-details: always   # /actuator/health 에서 DB 연결 상태 등 세부 정보까지 보이게 함
