@@ -8,7 +8,7 @@ CREATE TABLE `comment`
     `content`    TEXT        NOT NULL,
     `created_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
-);
+) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `files`;
 
@@ -22,7 +22,7 @@ CREATE TABLE `files`
     `file_size`   BIGINT       NOT NULL,
     `file_format` VARCHAR(500) NOT NULL,
     PRIMARY KEY (`id`)
-);
+) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `board`;
 
@@ -38,7 +38,7 @@ CREATE TABLE `board`
     `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`  DATETIME     NULL,
     PRIMARY KEY (`id`)
-);
+) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `category`;
 
@@ -47,7 +47,7 @@ CREATE TABLE `category`
     `id`   INT         NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(50) NOT NULL,
     PRIMARY KEY (`id`)
-);
+) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 ALTER TABLE `comment`
     ADD CONSTRAINT `FK_board_TO_comment_1` FOREIGN KEY (`board_id`)
