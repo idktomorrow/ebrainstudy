@@ -16,6 +16,7 @@ services:
       - --collation-server=UTF8MB4_UNICODE_CI
     volumes:
       - practice-week2-data:/var/lib/mysql
+      - ../db/db.sql:/docker-entrypoint-initdb.d/db.sql
 
 volumes:
   practice-week2-data:
