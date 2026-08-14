@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study2.practice.board.mapper.BoardMapper">
+
+  <!-- 게시글 등록. useGeneratedKeys+keyProperty로 AUTO_INCREMENT된 id를 파라미터 객체에 채워줌 -->
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO board (category_id, writer, title, content, password)
+    VALUES (#{categoryId}, #{writer}, #{title}, #{content}, #{password})
+  </insert>
+
+  <!--
+    검색조건 WHERE절. findAll(목록)과 countAll(총 건수)이 같은 조건을 공유해야 해서
+    <sql>로 한 번만 정의하고 <include>로 양쪽에서 가져다 씀 (복붙 방지)
+  -->
+  <sql id="searchCondition">
+    <where>
+      <!-- 제목+작성자+내용 통합검색. 검색어 없으면 이 조건 자체가 SQL에서 빠짐 -->
+      <if test="keyword != null and keyword != ''">
+        AND (
+        title LIKE CONCAT('%', #{keyword}, '%')
+        OR writer LIKE CONCAT('%', #{keyword}, '%')
+        OR content LIKE CONCAT('%', #{keyword}, '%')
+        )
+      </if>
+      <if test="categoryId != null">
+        AND category_id = #{categoryId}
+      </if>
+      <if test="startDate != null">
+        AND created_at &gt;= #{startDate}
+      </if>
+      <!-- endDate 당일까지 포함시키려고 '다음날 0시 이전'으로 비교 (created_at <= endDate 23:59:59와 같은 효과) -->
+      <if test="endDate != null">
+        AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+      </if>
+    </where>
+  </sql>
+
+  <!--
+    목록 조회. LIMIT에 페이지 계산식이 들어가야 해서 #{} 대신 ${} 사용
+    (#{}는 계산식 바인딩 불가). page/size는 int로 타입이 보장돼 있어서
+    SQL Injection 위험 없이 ${} 써도 안전함
+  -->
+  <select id="findAll" resultType="com.study2.practice.board.entity.Board">
+    SELECT id, category_id, writer, title, content, view_count, created_at, updated_at
+    FROM board
+    <include refid="searchCondition" />
+    ORDER BY created_at DESC
+    LIMIT ${(page - 1) * size}, ${size}
+  </select>
+
+  <!-- 검색된 총 건수. findAll과 같은 조건(searchCondition) 재사용, LIMIT 없이 COUNT만 -->
+  <select id="countAll" resultType="int">
+    SELECT COUNT(*)
+    FROM board
+    <include refid="searchCondition" />
+  </select>
+
+  <!-- 게시글 상세 조회 -->
+  <select id="findById" resultType="com.study2.practice.board.entity.Board">
+    SELECT id, category_id, writer, title, content, password, view_count, created_at, updated_at
+    FROM board
+    WHERE id = #{id}
+  </select>
+
+  <!-- 조회수 1 증가. 상세 조회 API 호출 시 Service에서 findById와 같이 호출됨 -->
+  <update id="increaseViewCount">
+    UPDATE board
+    SET view_count = view_count + 1
+    WHERE id = #{id}
+  </update>
+
+  <!-- 게시글 수정. 카테고리는 와이어프레임상 수정화면에서 표시만 되고 변경 불가라 SET 대상에서 제외 -->
+  <update id="update">
+    UPDATE board
+    SET writer = #{writer},
+        title = #{title},
+        content = #{content},
+        updated_at = NOW()
+    WHERE id = #{id}
+  </update>
+
+  <!-- 게시글 삭제. 비밀번호 확인은 Service에서 findById로 가져온 값과 비교 후 처리 (SQL엔 없음) -->
+  <delete id="delete">
+    DELETE FROM board
+    WHERE id = #{id}
+  </delete>
+</mapper>

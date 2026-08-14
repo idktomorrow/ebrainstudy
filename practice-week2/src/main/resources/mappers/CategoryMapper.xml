@@ -10,4 +10,10 @@
     FROM category
   </select>
 
+  <select id="findById" resultType="com.study2.practice.category.entity.Category">
+    SELECT id, name
+    FROM category
+    WHERE id = #{id}
+  </select>
+
 </mapper>

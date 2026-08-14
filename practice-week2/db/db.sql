@@ -1,3 +1,7 @@
+-- 이 세션 자체를 utf8mb4로 강제 (docker-entrypoint-initdb.d가 이 파일을 latin1로 잘못 읽어서
+-- 한글이 깨진 채로 INSERT되는 문제 방지)
+SET NAMES utf8mb4;
+
 -- 자식 테이블부터 삭제해야 FK 제약에 안 걸림 (재실행 가능하게)
 DROP TABLE IF EXISTS `comment`;
 DROP TABLE IF EXISTS `files`;
@@ -12,7 +16,7 @@ CREATE TABLE `category` (
 
 -- 게시판: 자유게시판 게시글
 CREATE TABLE `board` (
-                         `id`          BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,  -- 게시글 고유 번호
+                         `id`          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,  -- 게시글 고유 번호
                          `category_id` INT NOT NULL,                     -- 소속 카테고리 (category.id 참조)
                          `writer`      VARCHAR(50) NOT NULL,              -- 작성자명 (3자 이상 5자 미만, 서버에서 검증)
                          `title`       VARCHAR(100) NOT NULL,             -- 제목 (4자 이상 100자 미만)
@@ -26,7 +30,7 @@ CREATE TABLE `board` (
 -- 첨부파일: 게시글 1 : 첨부파일 N. 게시글 삭제 시 함께 삭제됨
 CREATE TABLE `files` (
                          `id`          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,   -- 첨부파일 고유 번호
-                         `board_id`    BIGINT NOT NULL,                -- 소속 게시글 (board.id 참조)
+                         `board_id`    INT NOT NULL,                -- 소속 게시글 (board.id 참조)
                          `origin_name` VARCHAR(500) NOT NULL,          -- 사용자가 업로드한 원본 파일명
                          `stored_name` VARCHAR(500) NOT NULL,          -- 서버에 저장된 파일명 (충돌 방지용)
                          `file_path`   VARCHAR(500) NOT NULL,          -- 서버 내 저장 경로
@@ -37,7 +41,7 @@ CREATE TABLE `files` (
 -- 댓글: 게시글 1 : 댓글 N. 등록/조회만 지원 (수정/삭제 없음), 게시글 삭제 시 함께 삭제됨
 CREATE TABLE `comment` (
                            `id`         INT NOT NULL AUTO_INCREMENT PRIMARY KEY,   -- 댓글 고유 번호
-                           `board_id`   BIGINT NOT NULL,                -- 소속 게시글 (board.id 참조)
+                           `board_id`   INT NOT NULL,                -- 소속 게시글 (board.id 참조)
                            `writer`     VARCHAR(50) NOT NULL,           -- 댓글 작성자명
                            `content`    TEXT NOT NULL,                  -- 댓글 내용
                            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 등록일시 (오래된 순 정렬 시 사용)
