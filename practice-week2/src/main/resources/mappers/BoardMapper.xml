@@ -44,7 +44,8 @@
     SQL Injection 위험 없이 ${} 써도 안전함
   -->
   <select id="findAll" resultType="com.study2.practice.board.entity.Board">
-    SELECT id, category_id, writer, title, content, view_count, created_at, updated_at
+    SELECT id, category_id, writer, title, content, view_count, created_at, updated_at,
+    EXISTS (SELECT 1 FROM files f WHERE f.board_id = board.id) AS has_attachment
     FROM board
     <include refid="searchCondition" />
     ORDER BY created_at DESC

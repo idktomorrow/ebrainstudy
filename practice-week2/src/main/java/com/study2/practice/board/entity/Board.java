@@ -25,5 +25,6 @@ public class Board {
   private Integer viewCount;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+  private Boolean hasAttachment;   // 목록 조회 전용 필드. findAll의 EXISTS 서브쿼리 결과만 채워짐
 
 }

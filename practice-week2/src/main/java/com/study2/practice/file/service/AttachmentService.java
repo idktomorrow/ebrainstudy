@@ -1,0 +1,122 @@
+package com.study2.practice.file.service;
+
+import com.study2.practice.board.mapper.BoardMapper;
+import com.study2.practice.file.entity.Attachment;
+import com.study2.practice.file.mapper.AttachmentMapper;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+/**
+ * 첨부파일 업로드/다운로드/삭제 비즈니스 로직.
+ * 파일 실체는 로컬 디스크(application.yaml의 app.upload-dir)에 저장하고,
+ * 메타데이터(원본명/저장명/경로/크기/확장자)만 DB(files 테이블)에 기록한다.
+ */
+@Service
+@RequiredArgsConstructor
+public class AttachmentService {
+
+  private final AttachmentMapper attachmentMapper;
+  private final BoardMapper boardMapper;
+
+  @Value("${app.upload-dir}")
+  private String uploadDir;
+
+  /** 게시글에 파일들을 첨부. 대상 게시글 존재 확인 후, 파일마다 디스크 저장 + 메타데이터 insert. */
+  public List<Integer> uploadFiles(Integer boardId, List<MultipartFile> files) {
+
+    if (boardMapper.findById(boardId) == null) {
+      throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
+    }
+
+    return files.stream()
+        .map(file -> uploadOne(boardId, file))
+        .toList();
+  }
+
+  private Integer uploadOne(Integer boardId, MultipartFile file) {
+
+    String originName = file.getOriginalFilename();
+    String extension = extractExtension(originName);
+    String storedName = UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
+
+    try {
+      Path uploadPath = Path.of(uploadDir);
+      Files.createDirectories(uploadPath);   // uploads 폴더가 없으면 생성
+
+      Path targetPath = uploadPath.resolve(storedName);
+      file.transferTo(targetPath);           // 실제 파일 내용을 디스크에 저장
+
+      Attachment attachment = new Attachment();
+      attachment.setBoardId(boardId);
+      attachment.setOriginName(originName);
+      attachment.setStoredName(storedName);
+      attachment.setFilePath(targetPath.toString());
+      attachment.setFileSize(file.getSize());
+      attachment.setFileFormat(extension);
+
+      attachmentMapper.insert(attachment);
+
+      return attachment.getId();
+    } catch (IOException e) {
+      throw new UncheckedIOException("파일 저장에 실패했습니다: " + originName, e);
+    }
+  }
+
+  private String extractExtension(String originName) {
+    if (originName == null || !originName.contains(".")) {
+      return "";
+    }
+    return originName.substring(originName.lastIndexOf('.') + 1);
+  }
+
+  /** 게시글에 첨부된 파일 목록 조회 (상세 화면용 메타데이터만). */
+  public List<Attachment> getAttachments(Integer boardId) {
+    return attachmentMapper.findByBoardId(boardId);
+  }
+
+  /** 다운로드용 리소스 조회. 서버 URI를 노출하지 않고 바이너리를 직접 스트리밍하기 위해 사용. */
+  public Attachment getAttachmentForDownload(Integer id) {
+    Attachment attachment = attachmentMapper.findById(id);
+    if (attachment == null) {
+      throw new NoSuchElementException("첨부파일을 찾을 수 없습니다.");
+    }
+    return attachment;
+  }
+
+  /** 실제 파일 리소스를 읽어온다 (Controller가 바이너리 응답을 만들 때 사용). */
+  public Resource loadFileAsResource(Attachment attachment) {
+    try {
+      Path path = Path.of(attachment.getFilePath());
+      return new UrlResource(path.toUri());
+    } catch (IOException e) {
+      throw new UncheckedIOException("파일을 읽을 수 없습니다: " + attachment.getOriginName(), e);
+    }
+  }
+
+  /** 첨부파일 삭제. 디스크 파일 + DB 메타데이터 둘 다 지운다. */
+  public void deleteAttachment(Integer id) {
+    Attachment attachment = attachmentMapper.findById(id);
+    if (attachment == null) {
+      throw new NoSuchElementException("첨부파일을 찾을 수 없습니다.");
+    }
+
+    try {
+      Files.deleteIfExists(Path.of(attachment.getFilePath()));
+    } catch (IOException e) {
+      throw new UncheckedIOException("파일 삭제에 실패했습니다: " + attachment.getOriginName(), e);
+    }
+
+    attachmentMapper.delete(id);
+  }
+}

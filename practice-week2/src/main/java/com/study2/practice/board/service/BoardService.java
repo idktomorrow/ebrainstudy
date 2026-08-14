@@ -11,6 +11,8 @@ import com.study2.practice.board.entity.Board;
 import com.study2.practice.board.mapper.BoardMapper;
 import com.study2.practice.category.entity.Category;
 import com.study2.practice.category.mapper.CategoryMapper;
+import com.study2.practice.file.dto.response.AttachmentResponse;
+import com.study2.practice.file.mapper.AttachmentMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -28,6 +30,7 @@ public class BoardService {
 
   private final BoardMapper boardMapper;
   private final CategoryMapper categoryMapper;   // 카테고리 이름 조회용으로 추가 주입
+  private final AttachmentMapper attachmentMapper;   // 상세 조회 시 첨부파일 목록 조회용
 
   /** 게시글 등록. 필드 검증 + 카테고리 존재 확인 후 insert. */
   public Integer createBoard(BoardCreateRequest request) {
@@ -65,6 +68,14 @@ public class BoardService {
 
     Category category = categoryMapper.findById(board.getCategoryId());
 
+    List<AttachmentResponse> attachments = attachmentMapper.findByBoardId(id).stream()
+        .map(attachment -> new AttachmentResponse(
+            attachment.getId(),
+            attachment.getOriginName(),
+            attachment.getFileSize()
+        ))
+        .toList();
+
     return new BoardDetailResponse(
         board.getId(),
         category.getName(),
@@ -73,7 +84,8 @@ public class BoardService {
         board.getContent(),
         board.getViewCount() + 1,   // DB엔 반영됐지만 board 객체엔 반영 안 돼서 +1을 직접 더함
         board.getCreatedAt(),
-        board.getUpdatedAt()
+        board.getUpdatedAt(),
+        attachments
     );
   }
 
@@ -133,7 +145,8 @@ public class BoardService {
             board.getWriter(),
             board.getViewCount(),
             board.getCreatedAt(),
-            board.getUpdatedAt()
+            board.getUpdatedAt(),
+            Boolean.TRUE.equals(board.getHasAttachment())
         ))
         .toList();
 
