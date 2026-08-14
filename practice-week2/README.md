@@ -28,26 +28,30 @@ cd ..
 - [x] `docker compose up -d`로 DB 기동, 테이블/시드 데이터 확인
 
 ### 1. Category 조회
-- [ ] `entity/Category`
-- [ ] `mapper/CategoryMapper` (인터페이스)
-- [ ] `resources/mappers/CategoryMapper.xml`
-- [ ] `dto/response/CategoryResponse`
-- [ ] `service/CategoryService`
-- [ ] `controller/CategoryController` (전체 카테고리 목록 조회 API)
+- [x] `entity/Category`
+- [x] `mapper/CategoryMapper` (인터페이스) — `findAll`, `findById`
+- [x] `resources/mappers/CategoryMapper.xml`
+- [x] `dto/response/CategoryResponse`
+- [x] `service/CategoryService`
+- [x] `controller/CategoryController` (전체 카테고리 목록 조회 API)
 
 ### 2. Board CRUD
-- [ ] `entity/Board`
-- [ ] `mapper/BoardMapper` (인터페이스)
-- [ ] `resources/mappers/BoardMapper.xml`
-- [ ] `dto/request/BoardCreateRequest`, `BoardUpdateRequest`
-- [ ] `dto/response/BoardListResponse`, `BoardDetailResponse`
-- [ ] `service/BoardService`
-- [ ] `controller/BoardController`
-  - [ ] 목록 조회 (검색/기간/페이지네이션)
-  - [ ] 상세 조회 (조회수 증가)
-  - [ ] 등록
-  - [ ] 수정
-  - [ ] 삭제 (비밀번호 확인)
+- [x] `entity/Board`
+- [x] `mapper/BoardMapper` (인터페이스)
+- [x] `resources/mappers/BoardMapper.xml` (동적 SQL, `<sql>`/`<include>` 재사용)
+- [x] `dto/request/BoardCreateRequest`, `BoardUpdateRequest`, `BoardDeleteRequest`, `BoardSearchRequest`
+- [x] `dto/response/BoardSummaryResponse`, `BoardListResponse`, `BoardDetailResponse`
+- [x] `service/BoardService` (검증, 비밀번호 확인, 카테고리명 매칭, 제목 축약)
+- [x] `controller/BoardController`
+  - [x] 목록 조회 (검색/기간/카테고리/페이지네이션) — 실제 호출 테스트 완료
+  - [x] 상세 조회 (조회수 증가) — 실제 호출 테스트 완료
+  - [x] 등록 — 실제 호출 테스트 완료
+  - [x] 수정 — 실제 호출 테스트 완료
+  - [x] 삭제 (비밀번호 확인) — 실제 호출 테스트 완료 (틀린 비밀번호 거부까지 확인)
+
+**알려진 이슈**: 검증 실패/비밀번호 불일치 시 지금은 500(Internal Server Error)으로 응답함.
+`@RestControllerAdvice`로 전역 예외 처리 붙여서 400/404로 정리하는 작업이 남아있음
+(`IllegalArgumentException` -> 400, `NoSuchElementException` -> 404).
 
 ### 3. Comment CRUD (등록/조회만)
 - [ ] `entity/Comment`

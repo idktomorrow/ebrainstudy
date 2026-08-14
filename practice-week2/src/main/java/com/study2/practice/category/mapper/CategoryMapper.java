@@ -9,4 +9,5 @@ public interface CategoryMapper {
 
   List<Category> findAll();   // 카테고리 전체 조회. XML의 id="findAll"과 매칭됨
 
+  Category findById(Integer id);
 }
