@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3309/practice_week2
+    url: jdbc:mysql://localhost:3309/practice_week2?useUnicode=true&characterEncoding=UTF-8
     username: practice
     password: practice
     driver-class-name: com.mysql.cj.jdbc.Driver
