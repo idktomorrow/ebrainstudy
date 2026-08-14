@@ -1,0 +1,21 @@
+name: practice-week2
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: practice-week2-db
+    ports:
+      - 3309:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: practice!32
+      TZ: Asia/Seoul
+      MYSQL_DATABASE: practice_week2
+      MYSQL_USER: practice
+      MYSQL_PASSWORD: practice
+    command:
+      - --character-set-server=UTF8MB4
+      - --collation-server=UTF8MB4_UNICODE_CI
+    volumes:
+      - practice-week2-data:/var/lib/mysql
+
+volumes:
+  practice-week2-data:
