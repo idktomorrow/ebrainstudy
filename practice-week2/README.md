@@ -54,12 +54,17 @@ cd ..
 (`IllegalArgumentException` -> 400, `NoSuchElementException` -> 404).
 
 ### 3. Comment CRUD (등록/조회만)
-- [ ] `entity/Comment`
-- [ ] `mapper/CommentMapper` (인터페이스)
-- [ ] `resources/mappers/CommentMapper.xml`
-- [ ] `dto/request/CommentCreateRequest`
-- [ ] `dto/response/CommentResponse`
-- [ ] `service/CommentService`
-- [ ] `controller/CommentController`
-  - [ ] 게시글별 댓글 조회
-  - [ ] 댓글 등록
+- [x] `entity/Comment`
+- [x] `mapper/CommentMapper` (인터페이스)
+- [x] `resources/mappers/CommentMapper.xml`
+- [x] `dto/request/CommentCreateRequest`
+- [x] `dto/response/CommentResponse`
+- [x] `service/CommentService` (게시글 존재 확인 + 필드 검증)
+- [x] `controller/CommentController` (`/api/boards/{boardId}/comments`)
+  - [x] 게시글별 댓글 조회 — 실제 호출 테스트 완료 (오래된 순 정렬 확인)
+  - [x] 댓글 등록 — 실제 호출 테스트 완료
+  - [x] 게시글 삭제 시 댓글 CASCADE 삭제 확인 완료
+
+### 4. 남은 작업
+- [ ] `@RestControllerAdvice` 전역 예외 처리 (`IllegalArgumentException`->400, `NoSuchElementException`->404)
+- [ ] 첨부파일(Files) 기능 — 필요 시
