@@ -65,6 +65,19 @@ cd ..
   - [x] 댓글 등록 — 실제 호출 테스트 완료
   - [x] 게시글 삭제 시 댓글 CASCADE 삭제 확인 완료
 
-### 4. 남은 작업
+### 4. 첨부파일(Attachment)
+- [x] `entity/Attachment` (`files` 테이블. 클래스명은 `java.nio.file.Files`와 겹치지 않게 `Attachment`로 명명)
+- [x] `mapper/AttachmentMapper` (인터페이스)
+- [x] `resources/mappers/AttachmentMapper.xml`
+- [x] `dto/response/AttachmentResponse`
+- [x] `service/AttachmentService` (로컬 디스크 저장, UUID 파일명으로 충돌 방지)
+- [x] `controller/AttachmentController`
+  - [x] `POST /api/boards/{boardId}/files` — 업로드 (여러 개 가능) — 실제 호출 테스트 완료
+  - [x] `GET /api/files/{id}` — 바이너리 다운로드 (URI 링크 아님, `Content-Disposition`) — 원본과 바이트 단위 일치 확인
+  - [x] `DELETE /api/files/{id}` — 삭제 (DB + 디스크 파일 모두) — 실제 삭제 확인
+- [x] 게시글 목록에 `hasAttachment` 추가 (EXISTS 서브쿼리), 상세에 `attachments` 목록 추가
+
+`application.yaml`에 `spring.servlet.multipart`(최대 10MB/파일, 20MB/요청), `app.upload-dir`(`./uploads`, 루트 `.gitignore`에 이미 포함) 설정 추가.
+
+### 5. 남은 작업
 - [ ] `@RestControllerAdvice` 전역 예외 처리 (`IllegalArgumentException`->400, `NoSuchElementException`->404)
-- [ ] 첨부파일(Files) 기능 — 필요 시
