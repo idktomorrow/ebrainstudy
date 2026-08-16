@@ -79,5 +79,12 @@ cd ..
 
 `application.yaml`에 `spring.servlet.multipart`(최대 10MB/파일, 20MB/요청), `app.upload-dir`(`./uploads`, 루트 `.gitignore`에 이미 포함) 설정 추가.
 
-### 5. 남은 작업
-- [ ] `@RestControllerAdvice` 전역 예외 처리 (`IllegalArgumentException`->400, `NoSuchElementException`->404)
+### 5. 전역 예외 처리
+- [x] `global/exception/ErrorResponse` — 공통 에러 응답 형태 (`status`, `message`)
+- [x] `global/exception/GlobalExceptionHandler` (`@RestControllerAdvice`)
+  - [x] `IllegalArgumentException` -> 400 (검증 실패, 비밀번호 불일치)
+  - [x] `NoSuchElementException` -> 404 (존재하지 않는 리소스)
+  - [x] 그 외 `Exception` -> 500 (원인은 서버 로그에만 남기고 클라이언트엔 상세 노출 안 함)
+- [x] 실제 호출로 400/404/200 전부 확인 완료
+
+이걸로 eBrainSoft 게시판 V1.1 스펙 전체(카테고리/게시글/댓글/첨부파일) + 공통 에러 처리까지 완료.
