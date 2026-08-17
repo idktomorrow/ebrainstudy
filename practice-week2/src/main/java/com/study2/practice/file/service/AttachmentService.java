@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,22 +27,37 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class AttachmentService {
 
+  // 업로드 허용 확장자 화이트리스트. 실행 파일(exe, sh, bat 등)처럼 위험한 형식은 의도적으로 제외
+  private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+      "pdf", "doc", "docx", "hwp", "xls", "xlsx", "ppt", "pptx", "txt",
+      "jpg", "jpeg", "png", "gif", "zip"
+  );
+
   private final AttachmentMapper attachmentMapper;
   private final BoardMapper boardMapper;
 
   @Value("${app.upload-dir}")
   private String uploadDir;
 
-  /** 게시글에 파일들을 첨부. 대상 게시글 존재 확인 후, 파일마다 디스크 저장 + 메타데이터 insert. */
+  /** 게시글에 파일들을 첨부. 대상 게시글 존재 확인 + 확장자 전부 검증 후, 파일마다 디스크 저장 + 메타데이터 insert. */
   public List<Integer> uploadFiles(Integer boardId, List<MultipartFile> files) {
 
     if (boardMapper.findById(boardId) == null) {
       throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
     }
 
+    // 저장 시작 전에 전부 검증 -> 하나라도 허용 안 되는 확장자면 아무 파일도 저장하지 않고 통째로 거부
+    files.forEach(file -> validateExtension(extractExtension(file.getOriginalFilename())));
+
     return files.stream()
         .map(file -> uploadOne(boardId, file))
         .toList();
+  }
+
+  private void validateExtension(String extension) {
+    if (extension.isEmpty() || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+      throw new IllegalArgumentException("허용되지 않는 파일 형식입니다: ." + extension);
+    }
   }
 
   private Integer uploadOne(Integer boardId, MultipartFile file) {
@@ -118,5 +134,20 @@ public class AttachmentService {
     }
 
     attachmentMapper.delete(id);
+  }
+
+  /**
+   * 게시글이 삭제될 때 호출. DB의 files 행은 FK ON DELETE CASCADE로 게시글과 함께
+   * 자동 삭제되지만, 디스크의 실제 파일은 DB가 알 수 없는 영역이라 여기서 직접 지운다.
+   * (게시글만 지우고 이 메서드를 안 부르면 디스크에 고아 파일이 남는다)
+   */
+  public void deleteFilesByBoardId(Integer boardId) {
+    for (Attachment attachment : attachmentMapper.findByBoardId(boardId)) {
+      try {
+        Files.deleteIfExists(Path.of(attachment.getFilePath()));
+      } catch (IOException e) {
+        throw new UncheckedIOException("파일 삭제에 실패했습니다: " + attachment.getOriginName(), e);
+      }
+    }
   }
 }
