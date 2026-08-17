@@ -76,6 +76,11 @@ cd ..
   - [x] `GET /api/files/{id}` — 바이너리 다운로드 (URI 링크 아님, `Content-Disposition`) — 원본과 바이트 단위 일치 확인
   - [x] `DELETE /api/files/{id}` — 삭제 (DB + 디스크 파일 모두) — 실제 삭제 확인
 - [x] 게시글 목록에 `hasAttachment` 추가 (EXISTS 서브쿼리), 상세에 `attachments` 목록 추가
+- [x] 업로드 확장자 화이트리스트 (`pdf/doc/docx/hwp/xls/xlsx/ppt/pptx/txt/jpg/jpeg/png/gif/zip`만 허용,
+      exe 등 위험한 확장자 차단) — 여러 파일 업로드 시 하나라도 거부되면 전부 저장 안 하는
+      all-or-nothing으로 처리 (부분 저장 방지)
+- [x] 게시글 삭제 시 첨부파일 디스크 정리 (`AttachmentService.deleteFilesByBoardId`) — DB의 `files`
+      행은 FK CASCADE로 자동 삭제되지만 디스크 파일은 안 지워지는 고아 파일 버그 발견 후 수정
 
 `application.yaml`에 `spring.servlet.multipart`(최대 10MB/파일, 20MB/요청), `app.upload-dir`(`./uploads`, 루트 `.gitignore`에 이미 포함) 설정 추가.
 

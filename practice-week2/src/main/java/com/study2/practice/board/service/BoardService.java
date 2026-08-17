@@ -12,7 +12,7 @@ import com.study2.practice.board.mapper.BoardMapper;
 import com.study2.practice.category.entity.Category;
 import com.study2.practice.category.mapper.CategoryMapper;
 import com.study2.practice.file.dto.response.AttachmentResponse;
-import com.study2.practice.file.mapper.AttachmentMapper;
+import com.study2.practice.file.service.AttachmentService;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -30,7 +30,7 @@ public class BoardService {
 
   private final BoardMapper boardMapper;
   private final CategoryMapper categoryMapper;   // 카테고리 이름 조회용으로 추가 주입
-  private final AttachmentMapper attachmentMapper;   // 상세 조회 시 첨부파일 목록 조회용
+  private final AttachmentService attachmentService;   // 상세 조회 시 첨부파일 목록 조회, 삭제 시 디스크 파일 정리용
 
   /** 게시글 등록. 필드 검증 + 카테고리 존재 확인 후 insert. */
   public Integer createBoard(BoardCreateRequest request) {
@@ -68,7 +68,7 @@ public class BoardService {
 
     Category category = categoryMapper.findById(board.getCategoryId());
 
-    List<AttachmentResponse> attachments = attachmentMapper.findByBoardId(id).stream()
+    List<AttachmentResponse> attachments = attachmentService.getAttachments(id).stream()
         .map(attachment -> new AttachmentResponse(
             attachment.getId(),
             attachment.getOriginName(),
@@ -124,6 +124,8 @@ public class BoardService {
       throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
+    // DB의 files 행은 FK CASCADE로 자동 삭제되지만, 디스크의 실제 파일은 별도로 지워야 함
+    attachmentService.deleteFilesByBoardId(id);
     boardMapper.delete(id);
   }
 
