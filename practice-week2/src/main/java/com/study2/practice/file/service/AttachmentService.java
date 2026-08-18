@@ -65,14 +65,22 @@ public class AttachmentService {
     String originName = file.getOriginalFilename();
     String extension = extractExtension(originName);
     String storedName = UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
+    Path targetPath;
 
     try {
       Path uploadPath = Path.of(uploadDir);
       Files.createDirectories(uploadPath);   // uploads 폴더가 없으면 생성
 
-      Path targetPath = uploadPath.resolve(storedName);
+      targetPath = uploadPath.resolve(storedName);
       file.transferTo(targetPath);           // 실제 파일 내용을 디스크에 저장
+    } catch (IOException e) {
+      throw new UncheckedIOException("파일 저장에 실패했습니다: " + originName, e);
+    }
 
+    // 디스크 저장은 끝났고 이제 DB에 메타데이터를 기록하는데, 이 단계가 실패하면
+    // (DB 연결 문제 등, IOException이 아니라서 위 catch로는 안 잡힘) 방금 쓴 파일이
+    // DB에 기록 하나 없이 디스크에만 고아로 남는다. insert 실패 시 방금 쓴 파일을 정리한다.
+    try {
       Attachment attachment = new Attachment();
       attachment.setBoardId(boardId);
       attachment.setOriginName(originName);
@@ -84,8 +92,17 @@ public class AttachmentService {
       attachmentMapper.insert(attachment);
 
       return attachment.getId();
-    } catch (IOException e) {
-      throw new UncheckedIOException("파일 저장에 실패했습니다: " + originName, e);
+    } catch (RuntimeException e) {
+      deleteQuietly(targetPath);
+      throw e;
+    }
+  }
+
+  private void deleteQuietly(Path path) {
+    try {
+      Files.deleteIfExists(path);
+    } catch (IOException ignored) {
+      // 정리 실패는 무시 -> 원래 발생한 예외(DB 저장 실패)를 그대로 던지는 게 더 중요
     }
   }
 
