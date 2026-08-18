@@ -92,4 +92,16 @@ cd ..
   - [x] 그 외 `Exception` -> 500 (원인은 서버 로그에만 남기고 클라이언트엔 상세 노출 안 함)
 - [x] 실제 호출로 400/404/200 전부 확인 완료
 
-이걸로 eBrainSoft 게시판 V1.1 스펙 전체(카테고리/게시글/댓글/첨부파일) + 공통 에러 처리까지 완료.
+### 6. 전체 버그 점검에서 발견/수정한 것
+- [x] **전역 예외 처리기가 Spring 프레임워크 자체의 400 에러까지 500으로 덮어쓰던 버그.**
+      `@ExceptionHandler(Exception.class)`가 너무 광범위해서 `MethodArgumentTypeMismatchException`
+      (숫자 파라미터에 문자열 전달 등), `HttpMessageNotReadableException`(JSON 문법 오류),
+      `MissingServletRequestPartException`/`MultipartException`(멀티파트 파트 누락)까지 다
+      가로채서 500으로 응답하고 있었음. 이 예외들을 400으로 매핑하는 핸들러를 catch-all보다
+      먼저 두는 식으로 수정.
+- [x] **페이지네이션 `page`/`size`에 0 이하 값이 들어오면 SQL `LIMIT`에 음수가 들어가서
+      500(SQL 문법 에러)이 나던 버그.** `BoardService.getBoardList()`에 `page < 1`,
+      `size < 1` 검증 추가해서 400으로 정리.
+
+이걸로 eBrainSoft 게시판 V1.1 스펙 전체(카테고리/게시글/댓글/첨부파일) + 공통 에러 처리 +
+발견된 버그 수정까지 완료.

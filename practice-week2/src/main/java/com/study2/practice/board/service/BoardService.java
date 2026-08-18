@@ -132,6 +132,8 @@ public class BoardService {
   /** 게시글 목록 조회. 검색조건에 맞는 목록 + 총 건수를 함께 응답. */
   public BoardListResponse getBoardList(BoardSearchRequest condition) {
 
+    validatePagination(condition.page(), condition.size());
+
     List<Board> boards = boardMapper.findAll(condition);
     int totalCount = boardMapper.countAll(condition);
 
@@ -153,6 +155,17 @@ public class BoardService {
         .toList();
 
     return new BoardListResponse(summaries, totalCount);
+  }
+
+  private void validatePagination(int page, int size) {
+    // 음수/0이 그대로 SQL의 LIMIT ${(page-1)*size}, ${size}에 들어가면 SQL 문법 에러(500)로
+    // 이어지므로, 여기서 미리 걸러서 400으로 응답되게 함
+    if (page < 1) {
+      throw new IllegalArgumentException("페이지 번호는 1 이상이어야 합니다.");
+    }
+    if (size < 1) {
+      throw new IllegalArgumentException("페이지당 건수는 1 이상이어야 합니다.");
+    }
   }
 
   private void validateWriter(String writer) {
