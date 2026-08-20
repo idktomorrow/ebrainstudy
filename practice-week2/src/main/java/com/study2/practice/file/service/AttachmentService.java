@@ -1,5 +1,6 @@
 package com.study2.practice.file.service;
 
+import com.study2.practice.board.entity.Board;
 import com.study2.practice.board.mapper.BoardMapper;
 import com.study2.practice.file.entity.Attachment;
 import com.study2.practice.file.mapper.AttachmentMapper;
@@ -39,11 +40,19 @@ public class AttachmentService {
   @Value("${app.upload-dir}")
   private String uploadDir;
 
-  /** 게시글에 파일들을 첨부. 대상 게시글 존재 확인 + 확장자 전부 검증 후, 파일마다 디스크 저장 + 메타데이터 insert. */
-  public List<Integer> uploadFiles(Integer boardId, List<MultipartFile> files) {
+  /**
+   * 게시글에 파일들을 첨부. 대상 게시글 존재 확인 + 비밀번호 확인 + 확장자 전부 검증 후,
+   * 파일마다 디스크 저장 + 메타데이터 insert.
+   * (첨부파일 관리는 게시글 수정 화면의 일부라, 게시글 비밀번호로 검증한다)
+   */
+  public List<Integer> uploadFiles(Integer boardId, List<MultipartFile> files, String password) {
 
-    if (boardMapper.findById(boardId) == null) {
+    Board board = boardMapper.findById(boardId);
+    if (board == null) {
       throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
+    }
+    if (!board.getPassword().equals(password)) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
     // 저장 시작 전에 전부 검증 -> 하나라도 허용 안 되는 확장자면 아무 파일도 저장하지 않고 통째로 거부
@@ -137,11 +146,22 @@ public class AttachmentService {
     }
   }
 
-  /** 첨부파일 삭제. 디스크 파일 + DB 메타데이터 둘 다 지운다. */
-  public void deleteAttachment(Integer id) {
+  /**
+   * 첨부파일 삭제. 디스크 파일 + DB 메타데이터 둘 다 지운다.
+   * 첨부파일 자체엔 비밀번호가 없어서, 이 파일이 속한 게시글의 비밀번호로 검증한다.
+   */
+  public void deleteAttachment(Integer id, String password) {
     Attachment attachment = attachmentMapper.findById(id);
     if (attachment == null) {
       throw new NoSuchElementException("첨부파일을 찾을 수 없습니다.");
+    }
+
+    Board board = boardMapper.findById(attachment.getBoardId());
+    if (board == null) {
+      throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
+    }
+    if (!board.getPassword().equals(password)) {
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
     try {

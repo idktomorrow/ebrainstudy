@@ -1,5 +1,6 @@
 package com.study2.practice.file.controller;
 
+import com.study2.practice.file.dto.request.AttachmentDeleteRequest;
 import com.study2.practice.file.entity.Attachment;
 import com.study2.practice.file.service.AttachmentService;
 import java.net.URLEncoder;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,13 +32,14 @@ public class AttachmentController {
 
   private final AttachmentService attachmentService;
 
-  /** 게시글에 파일 업로드 (여러 개 가능). 생성된 첨부파일 id 목록을 반환. */
+  /** 게시글에 파일 업로드 (여러 개 가능). 게시글 비밀번호 확인 후 처리. 생성된 첨부파일 id 목록을 반환. */
   @PostMapping("/api/boards/{boardId}/files")
   public List<Integer> uploadFiles(
       @PathVariable Integer boardId,
-      @RequestParam("files") List<MultipartFile> files
+      @RequestParam("files") List<MultipartFile> files,
+      @RequestParam("password") String password
   ) {
-    return attachmentService.uploadFiles(boardId, files);
+    return attachmentService.uploadFiles(boardId, files, password);
   }
 
   /** 첨부파일 다운로드. 서버 URI 링크가 아니라 바이너리를 직접 응답 본문에 실어 보낸다. */
@@ -57,9 +60,9 @@ public class AttachmentController {
         .body(resource);
   }
 
-  /** 첨부파일 삭제. */
+  /** 첨부파일 삭제. 이 파일이 속한 게시글의 비밀번호 확인 후 처리. */
   @DeleteMapping("/api/files/{id}")
-  public void deleteFile(@PathVariable Integer id) {
-    attachmentService.deleteAttachment(id);
+  public void deleteFile(@PathVariable Integer id, @RequestBody AttachmentDeleteRequest request) {
+    attachmentService.deleteAttachment(id, request.password());
   }
 }
