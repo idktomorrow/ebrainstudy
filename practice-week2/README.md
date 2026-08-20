@@ -106,6 +106,15 @@ cd ..
       고아로 남는 버그.** 게시글 삭제 시 고아 파일 버그(4번 항목)의 반대 케이스.
       `AttachmentService.uploadOne()`에서 DB insert 실패 시 방금 쓴 디스크 파일을
       정리하도록 수정.
+- [x] **[가장 심각] 첨부파일 업로드/삭제에 비밀번호 검증이 아예 빠져있던 인가(authorization)
+      버그.** 게시글 수정/삭제는 비밀번호를 확인하는데, `POST /api/boards/{boardId}/files`
+      (업로드)와 `DELETE /api/files/{id}`(삭제)는 아무 검증 없이 누구나 호출 가능했음 —
+      게시글 id/파일 id만 알면(둘 다 순차 증가하는 정수라 추측도 쉬움) 타인의 게시글에
+      파일을 첨부하거나 지울 수 있었음. 실제로 비밀번호 없이 업로드/삭제가 되는 것까지
+      재현 확인 후 수정.
+      - 업로드: `@RequestParam("password")` 추가, 게시글 비밀번호와 대조
+      - 삭제: `AttachmentDeleteRequest(password)` 바디 추가, 첨부파일이 속한 게시글의
+        비밀번호와 대조
 
 **참고 (수정 안 한 부분)**: `AttachmentService.deleteFilesByBoardId()`는 여러 파일 중
 하나 삭제에 실패하면 예외를 던지고 게시글 삭제 자체가 취소됨 — 그 시점까지 지운 파일과
