@@ -64,6 +64,11 @@ public class CommentService {
     if (writer == null || writer.isBlank()) {
       throw new IllegalArgumentException("작성자를 입력해주세요.");
     }
+    // comment.writer 컬럼이 VARCHAR(50)이라, 이걸 안 막으면 DB에서
+    // "Data too long for column" 에러가 나서 500으로 응답돼버림
+    if (writer.length() > 50) {
+      throw new IllegalArgumentException("작성자는 50자 이하여야 합니다.");
+    }
   }
 
   private void validateContent(String content) {
