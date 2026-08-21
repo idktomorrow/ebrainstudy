@@ -64,6 +64,10 @@ cd ..
   - [x] 게시글별 댓글 조회 — 실제 호출 테스트 완료 (오래된 순 정렬 확인)
   - [x] 댓글 등록 — 실제 호출 테스트 완료
   - [x] 게시글 삭제 시 댓글 CASCADE 삭제 확인 완료
+- [x] **버그 수정**: `comment.writer` 컬럼이 `VARCHAR(50)`인데 길이 검증이 공백 체크뿐이라,
+      50자 넘는 작성자명을 보내면 DB에서 `Data too long for column` 에러가 나서 500으로
+      응답되던 버그. 실제 재현(작성자 100자로 등록 시도 -> 500) 확인 후 `CommentService`에
+      50자 제한 검증 추가해서 400으로 정리.
 
 ### 4. 첨부파일(Attachment)
 - [x] `entity/Attachment` (`files` 테이블. 클래스명은 `java.nio.file.Files`와 겹치지 않게 `Attachment`로 명명)
@@ -115,6 +119,11 @@ cd ..
       - 업로드: `@RequestParam("password")` 추가, 게시글 비밀번호와 대조
       - 삭제: `AttachmentDeleteRequest(password)` 바디 추가, 첨부파일이 속한 게시글의
         비밀번호와 대조
+      - 게시글 A/B 두 개로 "다른 게시글 비밀번호로는 안 되는지"까지 교차 검증 완료
+- [x] **첨부파일 원본 파일명(`origin_name VARCHAR(500)`) 길이 미검증.** comment.writer와
+      같은 패턴의 버그 — `AttachmentService`에 업로드 전 파일명 길이 검증 추가.
+      (500자 넘는 파일명은 Tomcat 자체가 요청 단계에서 먼저 막아서 실제 500 에러로
+      재현은 못 했지만, 코드상 동일한 취약점 패턴이라 선제적으로 수정)
 
 **참고 (수정 안 한 부분)**: `AttachmentService.deleteFilesByBoardId()`는 여러 파일 중
 하나 삭제에 실패하면 예외를 던지고 게시글 삭제 자체가 취소됨 — 그 시점까지 지운 파일과

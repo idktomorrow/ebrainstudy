@@ -55,8 +55,11 @@ public class AttachmentService {
       throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
     }
 
-    // 저장 시작 전에 전부 검증 -> 하나라도 허용 안 되는 확장자면 아무 파일도 저장하지 않고 통째로 거부
-    files.forEach(file -> validateExtension(extractExtension(file.getOriginalFilename())));
+    // 저장 시작 전에 전부 검증 -> 하나라도 허용 안 되는 확장자/파일명이면 아무 파일도 저장하지 않고 통째로 거부
+    files.forEach(file -> {
+      validateExtension(extractExtension(file.getOriginalFilename()));
+      validateOriginName(file.getOriginalFilename());
+    });
 
     return files.stream()
         .map(file -> uploadOne(boardId, file))
@@ -66,6 +69,14 @@ public class AttachmentService {
   private void validateExtension(String extension) {
     if (extension.isEmpty() || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
       throw new IllegalArgumentException("허용되지 않는 파일 형식입니다: ." + extension);
+    }
+  }
+
+  private void validateOriginName(String originName) {
+    // files.origin_name 컬럼이 VARCHAR(500)이라, 이걸 안 막으면 DB에서
+    // "Data too long for column" 에러가 나서 500으로 응답돼버림 (comment.writer와 같은 종류의 버그)
+    if (originName != null && originName.length() > 500) {
+      throw new IllegalArgumentException("파일명이 너무 깁니다 (500자 이하만 가능).");
     }
   }
 
