@@ -1,0 +1,13 @@
+# 텍스트 파일은 저장소 안에서 항상 LF로 통일 (Windows 에디터가 CRLF로 저장해도 커밋 시 LF로 정규화됨)
+* text=auto eol=lf
+
+# 바이너리 파일은 줄바꿈 변환 대상에서 제외
+*.jar binary
+*.class binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+
+# Windows 전용 스크립트만 예외적으로 CRLF 유지
+*.bat text eol=crlf
