@@ -75,5 +75,10 @@ public class CommentService {
     if (content == null || content.isBlank()) {
       throw new IllegalArgumentException("댓글 내용을 입력해주세요.");
     }
+    // content 컬럼은 TEXT라 DB 에러는 안 나지만(6만자 넘어야 문제), 게시글 content(2000자
+    // 제한)와의 일관성 + 비정상적으로 긴 댓글 방지를 위해 같은 기준으로 상한을 둠
+    if (content.length() > 2000) {
+      throw new IllegalArgumentException("댓글 내용은 2000자 이하여야 합니다.");
+    }
   }
 }
