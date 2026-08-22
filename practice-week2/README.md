@@ -68,6 +68,9 @@ cd ..
       50자 넘는 작성자명을 보내면 DB에서 `Data too long for column` 에러가 나서 500으로
       응답되던 버그. 실제 재현(작성자 100자로 등록 시도 -> 500) 확인 후 `CommentService`에
       50자 제한 검증 추가해서 400으로 정리.
+- [x] **개선**: `comment.content`(`TEXT`)는 DB 제약상 에러는 안 나지만(6만자는 넘어야 문제),
+      게시글 `content`(2000자 제한)와의 일관성 + 비정상적으로 긴 댓글 방지를 위해 같은
+      기준(2000자)으로 상한 추가.
 
 ### 4. 첨부파일(Attachment)
 - [x] `entity/Attachment` (`files` 테이블. 클래스명은 `java.nio.file.Files`와 겹치지 않게 `Attachment`로 명명)
