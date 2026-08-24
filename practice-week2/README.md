@@ -34,6 +34,8 @@ cd ..
 - [x] `dto/response/CategoryResponse`
 - [x] `service/CategoryService`
 - [x] `controller/CategoryController` (전체 카테고리 목록 조회 API)
+- [x] **개선**: `findAll` 쿼리에 `ORDER BY`가 없어서 목록 순서가 DB 옵티마이저에 따라
+      달라질 수 있던 문제. `ORDER BY id` 추가해서 항상 일관된 순서로 응답되게 함.
 
 ### 2. Board CRUD
 - [x] `entity/Board`
