@@ -90,6 +90,8 @@ cd ..
       all-or-nothing으로 처리 (부분 저장 방지)
 - [x] 게시글 삭제 시 첨부파일 디스크 정리 (`AttachmentService.deleteFilesByBoardId`) — DB의 `files`
       행은 FK CASCADE로 자동 삭제되지만 디스크 파일은 안 지워지는 고아 파일 버그 발견 후 수정
+- [x] **개선**: `findByBoardId`(첨부파일 목록)에도 `ORDER BY`가 없어서 순서가 안 보장되던 문제.
+      Category의 같은 문제 고칠 때 발견해서 같이 정리 — `ORDER BY id`로 업로드 순서 고정.
 
 `application.yaml`에 `spring.servlet.multipart`(최대 10MB/파일, 20MB/요청), `app.upload-dir`(`./uploads`, 루트 `.gitignore`에 이미 포함) 설정 추가.
 

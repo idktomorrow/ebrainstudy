@@ -11,11 +11,12 @@
     VALUES (#{boardId}, #{originName}, #{storedName}, #{filePath}, #{fileSize}, #{fileFormat})
   </insert>
 
-  <!-- 게시글별 첨부파일 목록 -->
+  <!-- 게시글별 첨부파일 목록. ORDER BY 없으면 순서가 안 보장돼서, 업로드한 순서(id순)로 고정 -->
   <select id="findByBoardId" resultType="com.study2.practice.file.entity.Attachment">
     SELECT id, board_id, origin_name, stored_name, file_path, file_size, file_format
     FROM files
     WHERE board_id = #{boardId}
+    ORDER BY id
   </select>
 
   <!-- 첨부파일 단건 조회 -->
