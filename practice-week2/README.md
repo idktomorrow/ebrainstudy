@@ -140,3 +140,11 @@ cd ..
 
 이걸로 eBrainSoft 게시판 V1.1 스펙 전체(카테고리/게시글/댓글/첨부파일) + 공통 에러 처리 +
 발견된 버그 수정까지 완료.
+
+### 7. 테스트 코드 (진행 중)
+- [x] `spring-boot-starter-test` 추가 (JUnit5 + Mockito + AssertJ + Spring TestContext)
+- [ ] `CategoryServiceTest` — 워밍업용, 제일 단순한 도메인부터
+- [ ] `BoardServiceTest` — 검증 로직/비밀번호 확인/페이지네이션 검증
+- [ ] `CommentServiceTest` — 존재하지 않는 게시글, 필드 길이 검증
+- [ ] `AttachmentServiceTest` — 확장자 화이트리스트, 비밀번호 검증, `@TempDir`로 디스크 격리
+- [ ] (선택) `GlobalExceptionHandler` + Controller `MockMvc` 통합 테스트

@@ -27,6 +27,8 @@ tasks.withType(JavaCompile) {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    // JUnit5 + Mockito + AssertJ + Spring TestContext(MockMvc 등)를 한 번에 가져옴
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     runtimeOnly group: 'com.mysql', name: 'mysql-connector-j', version: '9.3.0'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
