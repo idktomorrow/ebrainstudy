@@ -143,7 +143,8 @@ cd ..
 
 ### 7. 테스트 코드 (진행 중)
 - [x] `spring-boot-starter-test` 추가 (JUnit5 + Mockito + AssertJ + Spring TestContext)
-- [ ] `CategoryServiceTest` — 워밍업용, 제일 단순한 도메인부터
+- [x] `CategoryServiceTest` — 워밍업용, 제일 단순한 도메인부터. Mapper를 mock 처리해서
+      Entity -> DTO 변환 로직만 검증 (정상 매핑 + 빈 목록 케이스). 2개 테스트 모두 통과 확인.
 - [ ] `BoardServiceTest` — 검증 로직/비밀번호 확인/페이지네이션 검증
 - [ ] `CommentServiceTest` — 존재하지 않는 게시글, 필드 길이 검증
 - [ ] `AttachmentServiceTest` — 확장자 화이트리스트, 비밀번호 검증, `@TempDir`로 디스크 격리
