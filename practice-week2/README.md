@@ -148,6 +148,7 @@ cd ..
 - [x] `BoardServiceTest` — 등록/상세조회/수정/삭제/목록 5개 그룹, 총 19개 테스트
       (`@Nested`로 그룹화). 검증 로직, 비밀번호 확인, 페이지네이션 검증, 조회수 +1 반영,
       삭제 시 "첨부파일 정리 -> 게시글 삭제" 순서(`InOrder`)까지 커버. 전부 통과 확인.
-- [ ] `CommentServiceTest` — 존재하지 않는 게시글, 필드 길이 검증
+- [x] `CommentServiceTest` — 등록/조회 2개 그룹, 총 8개 테스트. 존재하지 않는 게시글,
+      작성자/내용 공백·길이 검증(50자/2000자), 정상 등록·조회 매핑까지 커버. 전부 통과 확인.
 - [ ] `AttachmentServiceTest` — 확장자 화이트리스트, 비밀번호 검증, `@TempDir`로 디스크 격리
 - [ ] (선택) `GlobalExceptionHandler` + Controller `MockMvc` 통합 테스트
