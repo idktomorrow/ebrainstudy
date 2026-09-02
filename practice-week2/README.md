@@ -150,5 +150,9 @@ cd ..
       삭제 시 "첨부파일 정리 -> 게시글 삭제" 순서(`InOrder`)까지 커버. 전부 통과 확인.
 - [x] `CommentServiceTest` — 등록/조회 2개 그룹, 총 8개 테스트. 존재하지 않는 게시글,
       작성자/내용 공백·길이 검증(50자/2000자), 정상 등록·조회 매핑까지 커버. 전부 통과 확인.
-- [ ] `AttachmentServiceTest` — 확장자 화이트리스트, 비밀번호 검증, `@TempDir`로 디스크 격리
+- [x] `AttachmentServiceTest` — 업로드/조회/다운로드/삭제/게시글삭제시정리 5개 그룹, 총
+      14개 테스트. `@TempDir`로 실제 디스크 I/O를 격리해서 검증. 확장자 화이트리스트,
+      파일명 길이, 비밀번호 검증, all-or-nothing 저장, DB 실패 시 고아 파일 정리까지
+      전부 실제 파일 생성/삭제로 확인 (Mock이 아니라 진짜 파일 존재 여부를 assert).
+      전부 통과 확인.
 - [ ] (선택) `GlobalExceptionHandler` + Controller `MockMvc` 통합 테스트
