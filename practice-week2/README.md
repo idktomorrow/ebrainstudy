@@ -155,4 +155,12 @@ cd ..
       파일명 길이, 비밀번호 검증, all-or-nothing 저장, DB 실패 시 고아 파일 정리까지
       전부 실제 파일 생성/삭제로 확인 (Mock이 아니라 진짜 파일 존재 여부를 assert).
       전부 통과 확인.
-- [ ] (선택) `GlobalExceptionHandler` + Controller `MockMvc` 통합 테스트
+- [x] `BoardControllerTest` — `@WebMvcTest`로 Spring MVC 요청 처리 파이프라인
+      (DispatcherServlet, JSON 직렬화, `GlobalExceptionHandler`)까지 통째로 검증. Service는
+      `@MockitoBean`으로 대체, DB는 안 건드림. 4개 테스트: Service 예외별 HTTP 상태코드
+      매핑(400/404), 정상 응답(200), 그리고 **`page=abc` 요청이 400으로 응답되는지** —
+      이건 예전에 실제로 겪었던 "예외 처리기가 Spring 자체 400을 500으로 덮어쓰던 버그"의
+      회귀 테스트. 전부 통과 확인.
+
+이걸로 계획했던 테스트 커버리지(Day 1~5) 전부 완료. 전체 47개 테스트 통과
+(Category 2 + Board 19 + Comment 8 + Attachment 14 + BoardController 4).
