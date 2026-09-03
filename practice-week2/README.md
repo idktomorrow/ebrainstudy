@@ -162,5 +162,10 @@ cd ..
       이건 예전에 실제로 겪었던 "예외 처리기가 Spring 자체 400을 500으로 덮어쓰던 버그"의
       회귀 테스트. 전부 통과 확인.
 
-이걸로 계획했던 테스트 커버리지(Day 1~5) 전부 완료. 전체 47개 테스트 통과
-(Category 2 + Board 19 + Comment 8 + Attachment 14 + BoardController 4).
+이걸로 계획했던 테스트 커버리지(Day 1~5) 전부 완료.
+
+- [x] `CategoryControllerTest` — 파라미터/바디 없는 제일 단순한 컨트롤러. 목록 응답,
+      빈 배열 응답 2개 테스트. 전부 통과 확인.
+
+전체 49개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+BoardController 4 + CategoryController 2).
