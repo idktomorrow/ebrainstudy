@@ -167,5 +167,8 @@ cd ..
 - [x] `CategoryControllerTest` — 파라미터/바디 없는 제일 단순한 컨트롤러. 목록 응답,
       빈 배열 응답 2개 테스트. 전부 통과 확인.
 
-전체 49개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
-BoardController 4 + CategoryController 2).
+- [x] `CommentControllerTest` — 목록 조회, 존재하지 않는 게시글(404), 정상 등록(200),
+      검증 실패(400) 4개 테스트. 전부 통과 확인.
+
+전체 53개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+BoardController 4 + CategoryController 2 + CommentController 4).
