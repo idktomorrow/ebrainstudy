@@ -174,6 +174,20 @@ cd ..
       (`Content-Disposition` 헤더 + 바이너리 내용 확인), 삭제까지 7개 테스트. 전부 통과 확인.
 
 **이걸로 4개 도메인(Category/Board/Comment/Attachment) 전부 Service + Controller
-테스트가 갖춰짐.** 전체 60개 테스트 통과 (Category 2 + Board 19 + Comment 8 +
-Attachment 14 + BoardController 4 + CategoryController 2 + CommentController 4 +
-AttachmentController 7).
+테스트가 갖춰짐.**
+
+### 8. 완전 통합 테스트
+- [x] `BoardIntegrationTest` — `@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional`로
+      애플리케이션 전체(Controller -> Service -> Mapper -> **실제 MySQL**)를 그대로 띄워서
+      검증. 지금까지는 Mapper/Service를 Mock으로 대체했지만, 여기서는 XML의 실제 SQL(동적
+      조건, 조인, 페이지네이션)이 진짜로 동작하는지까지 확인함.
+      - 게시글 등록 -> 조회(카테고리 조인 + 조회수 실제 누적) -> 수정 -> 댓글 등록/조회 ->
+        삭제 -> 삭제 후 404 확인, 전체 라이프사이클 1개 테스트
+      - 키워드/카테고리 필터가 적용된 검색 결과가 실제 DB에서 정확히 나오는지 1개 테스트
+      - `@Transactional`로 각 테스트 종료 시 자동 롤백 -> 실제 DB(`docker compose`로 띄운
+        MySQL)에 테스트 데이터가 전혀 안 남는 것까지 직접 확인 (board/comment 3건+1건
+        생성했다가 롤백 후 0건인 것 확인)
+
+전체 62개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
+BoardIntegrationTest 2).
