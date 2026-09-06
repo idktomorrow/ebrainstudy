@@ -170,5 +170,10 @@ cd ..
 - [x] `CommentControllerTest` — 목록 조회, 존재하지 않는 게시글(404), 정상 등록(200),
       검증 실패(400) 4개 테스트. 전부 통과 확인.
 
-전체 53개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
-BoardController 4 + CategoryController 2 + CommentController 4).
+- [x] `AttachmentControllerTest` — 멀티파트 업로드(`MockMvc.multipart()`), 다운로드
+      (`Content-Disposition` 헤더 + 바이너리 내용 확인), 삭제까지 7개 테스트. 전부 통과 확인.
+
+**이걸로 4개 도메인(Category/Board/Comment/Attachment) 전부 Service + Controller
+테스트가 갖춰짐.** 전체 60개 테스트 통과 (Category 2 + Board 19 + Comment 8 +
+Attachment 14 + BoardController 4 + CategoryController 2 + CommentController 4 +
+AttachmentController 7).
