@@ -200,6 +200,12 @@ cd ..
       - 테스트 후 실제 `uploads/` 폴더가 그대로 비어있는 것, 실제 DB의 board/files
         테이블도 0건인 것까지 직접 확인.
 
-전체 64개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+- [x] **`BoardIntegrationTest`에 등록일 범위(`startDate`/`endDate`) 검색 테스트 추가.**
+      Service 단위 테스트는 Mapper를 mock해서 건너뛰었고, 세션 내내 curl로도 실제
+      테스트한 적 없던 `DATE_ADD(...)` 로직(종료일 당일까지 포함시키는 SQL)을 처음으로
+      실제 DB로 검증. 오늘 등록한 글이 "오늘~오늘" 범위엔 걸리고 먼 과거 범위엔 안
+      걸리는 것 확인.
+
+전체 65개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
-BoardIntegrationTest 2 + AttachmentIntegrationTest 2).
+BoardIntegrationTest 3 + AttachmentIntegrationTest 2).
