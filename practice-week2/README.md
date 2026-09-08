@@ -188,6 +188,18 @@ cd ..
         MySQL)에 테스트 데이터가 전혀 안 남는 것까지 직접 확인 (board/comment 3건+1건
         생성했다가 롤백 후 0건인 것 확인)
 
-전체 62개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+- [x] `AttachmentIntegrationTest` — 업로드/다운로드/삭제가 실제 디스크+DB+HTTP까지 전부
+      합쳐서 동작하는지 검증 (이번 세션에서 버그가 제일 많이 나왔던 도메인이라 제일
+      중요한 회귀 테스트). `app.upload-dir`을 `@DynamicPropertySource`로 JUnit `@TempDir`
+      로 바꿔치기해서 실제 프로젝트 `uploads/` 폴더는 안 건드림.
+      - 업로드 -> 상세조회에 포함 -> 다운로드(원본과 바이트 단위 일치) -> 삭제(디스크
+        파일도 실제로 사라짐), 전체 라이프사이클 1개
+      - **첨부파일 API를 안 거치고 게시글만 삭제해도 디스크 파일이 같이 정리되는지** —
+        예전에 실제로 겪었던 고아 파일 버그의 회귀 테스트를 Mock이 아니라 진짜
+        HTTP+DB+디스크로 검증. 1개
+      - 테스트 후 실제 `uploads/` 폴더가 그대로 비어있는 것, 실제 DB의 board/files
+        테이블도 0건인 것까지 직접 확인.
+
+전체 64개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
-BoardIntegrationTest 2).
+BoardIntegrationTest 2 + AttachmentIntegrationTest 2).
