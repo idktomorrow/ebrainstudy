@@ -12,6 +12,7 @@ import com.study2.practice.board.dto.request.BoardCreateRequest;
 import com.study2.practice.board.dto.request.BoardDeleteRequest;
 import com.study2.practice.board.dto.request.BoardUpdateRequest;
 import com.study2.practice.comment.dto.request.CommentCreateRequest;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,6 +136,37 @@ class BoardIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalCount").value(1))
         .andExpect(jsonPath("$.boards[0].title").value("자유게시판 잡담"));
+  }
+
+  @Test
+  @DisplayName("실제 DB에서 등록일 범위(startDate/endDate) 필터가 적용된 결과를 반환한다")
+  void search_filtersByDateRange_fromRealDatabase() throws Exception {
+    // created_at은 DB의 DEFAULT CURRENT_TIMESTAMP로 채워지니, 지금 만든 게시글의
+    // 등록일은 오늘이다. XML의 endDate 조건(DATE_ADD(...INTERVAL 1 DAY))이 실제로
+    // "당일까지 포함"하는지는 Service 단위 테스트(Mapper mock)로는 검증이 안 되고,
+    // 진짜 DB로만 확인할 수 있다.
+    createBoard(1, "김철수", "오늘 쓴 글", "오늘 작성했습니다");
+    LocalDate today = LocalDate.now();
+
+    // 오늘을 포함하는 범위로 검색하면 나와야 함 (endDate=오늘이 당일 끝까지 포함하는지 확인)
+    mockMvc.perform(get("/api/boards")
+            .param("startDate", today.toString())
+            .param("endDate", today.toString())
+            .param("page", "1")
+            .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalCount").value(1))
+        .andExpect(jsonPath("$.boards[0].title").value("오늘 쓴 글"));
+
+    // 오늘을 포함하지 않는 과거 범위로 검색하면 안 나와야 함
+    LocalDate farPast = today.minusDays(10);
+    mockMvc.perform(get("/api/boards")
+            .param("startDate", farPast.minusDays(5).toString())
+            .param("endDate", farPast.toString())
+            .param("page", "1")
+            .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalCount").value(0));
   }
 
   private void createBoard(int categoryId, String writer, String title, String content) throws Exception {
