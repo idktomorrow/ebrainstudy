@@ -169,9 +169,54 @@ class BoardIntegrationTest {
         .andExpect(jsonPath("$.totalCount").value(0));
   }
 
-  private void createBoard(int categoryId, String writer, String title, String content) throws Exception {
+  @Test
+  @DisplayName("같은 초에 여러 게시글이 등록돼도 최신순 정렬이 안정적으로 유지된다")
+  void findAll_ordersStably_evenWhenCreatedInSameSecond() throws Exception {
+    // created_at은 DATETIME이라 초 단위까지만 저장됨. 테스트 안에서 연달아 등록하면
+    // 셋 다 같은 초에 들어갈 가능성이 높은데, 그래도 순서가 흔들리면 안 된다
+    // (ORDER BY created_at DESC, id DESC로 id를 2차 정렬 기준 삼아서 고친 부분의 검증)
+    createBoard(1, "김철수", "첫번째 글", "첫번째 내용입니다");
+    createBoard(1, "이영희", "두번째 글", "두번째 내용입니다");
+    createBoard(1, "박민수", "세번째 글", "세번째 내용입니다");
+
+    // 최신순(DESC)이니 나중에 등록한 게 먼저 나와야 함
+    mockMvc.perform(get("/api/boards").param("page", "1").param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boards[0].title").value("세번째 글"))
+        .andExpect(jsonPath("$.boards[1].title").value("두번째 글"))
+        .andExpect(jsonPath("$.boards[2].title").value("첫번째 글"));
+  }
+
+  @Test
+  @DisplayName("같은 초에 여러 댓글이 달려도 오래된 순 정렬이 안정적으로 유지된다")
+  void getComments_ordersStably_evenWhenCreatedInSameSecond() throws Exception {
+    int boardId = createBoard(1, "김철수", "댓글 순서 테스트", "본문 내용입니다");
+
+    addComment(boardId, "A", "첫 댓글");
+    addComment(boardId, "B", "둘째 댓글");
+    addComment(boardId, "C", "셋째 댓글");
+
+    // 오래된 순(ASC)이니 먼저 등록한 게 먼저 나와야 함
+    mockMvc.perform(get("/api/boards/{boardId}/comments", boardId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].content").value("첫 댓글"))
+        .andExpect(jsonPath("$[1].content").value("둘째 댓글"))
+        .andExpect(jsonPath("$[2].content").value("셋째 댓글"));
+  }
+
+  private int createBoard(int categoryId, String writer, String title, String content) throws Exception {
     BoardCreateRequest request = new BoardCreateRequest(categoryId, writer, title, content, "abc123!@#");
-    mockMvc.perform(post("/api/boards")
+    String response = mockMvc.perform(post("/api/boards")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+    return Integer.parseInt(response);
+  }
+
+  private void addComment(int boardId, String writer, String content) throws Exception {
+    CommentCreateRequest request = new CommentCreateRequest(writer, content);
+    mockMvc.perform(post("/api/boards/{boardId}/comments", boardId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk());

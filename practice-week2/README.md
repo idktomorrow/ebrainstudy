@@ -206,6 +206,15 @@ cd ..
       실제 DB로 검증. 오늘 등록한 글이 "오늘~오늘" 범위엔 걸리고 먼 과거 범위엔 안
       걸리는 것 확인.
 
-전체 65개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+- [x] **버그 발견/수정: 목록 정렬이 동점 상황에서 순서 보장이 안 되던 문제.**
+      `board.created_at`/`comment.created_at`이 `DATETIME`이라 초 단위까지만 저장됨 —
+      같은 초에 여러 건이 등록되면 `ORDER BY created_at`만으로는 SQL 표준상 순서가
+      보장되지 않음 (우연히 맞게 나오고 있었을 뿐, 보장된 동작이 아니었음). `id`를 2차
+      정렬 기준으로 추가해서 확정지음 (`BoardMapper.findAll`: `created_at DESC, id DESC`,
+      `CommentMapper.findByBoardId`: `created_at ASC, id ASC`). `BoardIntegrationTest`에
+      실제로 짧은 시간에 여러 건을 등록해서 순서가 안정적으로 나오는지 검증하는 테스트
+      2개 추가.
+
+전체 67개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
-BoardIntegrationTest 3 + AttachmentIntegrationTest 2).
+BoardIntegrationTest 5 + AttachmentIntegrationTest 2).
