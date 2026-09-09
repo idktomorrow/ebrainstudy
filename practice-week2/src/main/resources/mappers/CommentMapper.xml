@@ -11,12 +11,17 @@
     VALUES (#{boardId}, #{writer}, #{content})
   </insert>
 
-  <!-- 게시글별 댓글 목록. 오래된 순으로 정렬 (최근 댓글이 하단에 출력되도록) -->
+  <!--
+    게시글별 댓글 목록. 오래된 순으로 정렬 (최근 댓글이 하단에 출력되도록).
+    created_at은 DATETIME이라 초 단위까지만 저장됨 -> 같은 초에 댓글이 여러 개 달리면
+    created_at만으로는 순서가 SQL 표준상 보장이 안 됨. id는 항상 유일하고 등록 순서와
+    일치하니 2차 정렬 기준으로 추가해서 동점 상황에서도 순서를 확정지음
+  -->
   <select id="findByBoardId" resultType="com.study2.practice.comment.entity.Comment">
     SELECT id, board_id, writer, content, created_at
     FROM comment
     WHERE board_id = #{boardId}
-    ORDER BY created_at ASC
+    ORDER BY created_at ASC, id ASC
   </select>
 
 </mapper>
