@@ -93,6 +93,21 @@ class BoardServiceTest {
     }
 
     @Test
+    @DisplayName("제목이 공백만 있으면 길이 조건을 만족해도 예외가 발생한다")
+    void failsWhenTitleIsBlank() {
+      // "    "(공백 4칸)은 length()로는 4자 이상 100자 미만을 통과해버리는 실제 버그였던
+      // 케이스. isBlank() 체크로 막았는지 확인
+      BoardCreateRequest request =
+          new BoardCreateRequest(1, "김철수", "    ", "내용은충분히깁니다", "abc123!@#");
+
+      assertThatThrownBy(() -> boardService.createBoard(request))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("제목은 4자 이상 100자 미만이어야 합니다.");
+
+      verify(boardMapper, never()).insert(any(Board.class));
+    }
+
+    @Test
     @DisplayName("비밀번호에 특수문자가 없으면 예외가 발생한다")
     void failsWhenPasswordMissingSpecialChar() {
       BoardCreateRequest request =
