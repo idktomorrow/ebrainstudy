@@ -215,6 +215,13 @@ cd ..
       실제로 짧은 시간에 여러 건을 등록해서 순서가 안정적으로 나오는지 검증하는 테스트
       2개 추가.
 
-전체 67개 테스트 통과 (Category 2 + Board 19 + Comment 8 + Attachment 14 +
+- [x] **버그 발견/수정: Board의 작성자/제목/내용 검증이 공백만 있는 값을 못 걸러냄.**
+      `validateWriter`/`validateTitle`/`validateContent`가 길이만 체크해서, `"    "`
+      (공백 4칸)처럼 길이 조건은 만족하지만 실질적으로 빈 값인 입력이 그대로 등록됐음.
+      실제로 공백 제목으로 게시글 생성이 되는 것까지 재현 확인. Comment는 이미
+      `isBlank()`를 체크하고 있었는데 Board만 빠져있던 것 — `isBlank()` 체크 추가로
+      통일. `BoardServiceTest`에 회귀 테스트 추가.
+
+전체 68개 테스트 통과 (Category 2 + Board 20 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
 BoardIntegrationTest 5 + AttachmentIntegrationTest 2).

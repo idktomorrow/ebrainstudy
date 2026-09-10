@@ -169,13 +169,14 @@ public class BoardService {
   }
 
   private void validateWriter(String writer) {
-    if (writer == null || writer.length() < 3 || writer.length() >= 5) {
+    // 길이만 보면 "   "(공백 3칸)도 통과해버림 -> isBlank()로 공백만 있는 값도 같이 막음
+    if (writer == null || writer.isBlank() || writer.length() < 3 || writer.length() >= 5) {
       throw new IllegalArgumentException("작성자는 3자 이상 5자 미만이어야 합니다.");
     }
   }
 
   private void validatePassword(String password) {
-    if (password == null || password.length() < 4 || password.length() >= 16) {
+    if (password == null || password.isBlank() || password.length() < 4 || password.length() >= 16) {
       throw new IllegalArgumentException("비밀번호는 4자 이상 16자 미만이어야 합니다.");
     }
     if (!password.matches(".*[a-zA-Z].*")
@@ -186,13 +187,13 @@ public class BoardService {
   }
 
   private void validateTitle(String title) {
-    if (title == null || title.length() < 4 || title.length() >= 100) {
+    if (title == null || title.isBlank() || title.length() < 4 || title.length() >= 100) {
       throw new IllegalArgumentException("제목은 4자 이상 100자 미만이어야 합니다.");
     }
   }
 
   private void validateContent(String content) {
-    if (content == null || content.length() < 4 || content.length() >= 2000) {
+    if (content == null || content.isBlank() || content.length() < 4 || content.length() >= 2000) {
       throw new IllegalArgumentException("내용은 4자 이상 2000자 미만이어야 합니다.");
     }
   }
