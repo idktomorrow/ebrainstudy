@@ -222,6 +222,13 @@ cd ..
       `isBlank()`를 체크하고 있었는데 Board만 빠져있던 것 — `isBlank()` 체크 추가로
       통일. `BoardServiceTest`에 회귀 테스트 추가.
 
+- [x] **점검: 게시글 수정 후 `updatedAt`이 실제로 채워지는지 확인.**
+      `BoardIntegrationTest`의 라이프사이클 테스트가 수정 후 `title`/`writer`만
+      검증하고 `updatedAt`은 한 번도 검증한 적이 없었음. curl로 직접 재현해보니
+      수정 전 `null` → 수정 후 실제 타임스탬프로 정상적으로 채워지는 것을 확인 —
+      버그는 아니었지만 테스트 공백이었으므로 `.andExpect(jsonPath("$.updatedAt")
+      .exists())` 검증을 라이프사이클 테스트에 보강.
+
 전체 68개 테스트 통과 (Category 2 + Board 20 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
 BoardIntegrationTest 5 + AttachmentIntegrationTest 2).

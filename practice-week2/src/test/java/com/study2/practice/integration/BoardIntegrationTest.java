@@ -86,7 +86,9 @@ class BoardIntegrationTest {
 
     mockMvc.perform(get("/api/boards/{id}", boardId))
         .andExpect(jsonPath("$.title").value("수정된 제목"))
-        .andExpect(jsonPath("$.writer").value("박영희"));
+        .andExpect(jsonPath("$.writer").value("박영희"))
+        .andExpect(jsonPath("$.updatedAt").exists())
+        .andExpect(jsonPath("$.updatedAt").isNotEmpty());
 
     // 6. 댓글 등록 + 조회 -> comment 테이블에 실제로 저장되고 조회되는지 확인
     CommentCreateRequest commentRequest = new CommentCreateRequest("이순신", "실제 DB 댓글 테스트");
