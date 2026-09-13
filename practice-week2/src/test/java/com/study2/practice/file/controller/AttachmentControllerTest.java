@@ -104,6 +104,21 @@ class AttachmentControllerTest {
   }
 
   @Test
+  @DisplayName("파일명에 공백이 있으면 Content-Disposition에 '+'가 아니라 %20으로 인코딩된다")
+  void downloadFile_encodesSpaceAsPercent20_notPlus() throws Exception {
+    byte[] content = "test".getBytes(StandardCharsets.UTF_8);
+    Attachment attachment = new Attachment(1, 1, "my file.txt", "uuid.txt", "/x/uuid.txt",
+        (long) content.length, "txt");
+    when(attachmentService.getAttachmentForDownload(1)).thenReturn(attachment);
+    when(attachmentService.loadFileAsResource(attachment))
+        .thenReturn(new ByteArrayResource(content));
+
+    mockMvc.perform(get("/api/files/{id}", 1))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Content-Disposition", containsString("my%20file.txt")));
+  }
+
+  @Test
   @DisplayName("존재하지 않는 첨부파일을 다운로드하려 하면 404로 응답된다")
   void downloadFile_returns404_whenNotFound() throws Exception {
     when(attachmentService.getAttachmentForDownload(999))

@@ -49,7 +49,10 @@ public class AttachmentController {
     Resource resource = attachmentService.loadFileAsResource(attachment);
 
     // 파일명에 한글이 들어갈 수 있어서 Content-Disposition 헤더는 URL 인코딩해서 넣음
-    String encodedName = URLEncoder.encode(attachment.getOriginName(), StandardCharsets.UTF_8);
+    // URLEncoder는 폼 인코딩 규칙이라 공백을 '+'로 바꾸는데, RFC 5987의 filename*= 값에서는
+    // '+'가 공백으로 해석되지 않으므로 파일명이 깨짐 -> '+'를 다시 %20으로 치환해서 보정
+    String encodedName = URLEncoder.encode(attachment.getOriginName(), StandardCharsets.UTF_8)
+        .replace("+", "%20");
 
     // 파일 종류를 가리지 않고 항상 '다운로드'로 처리되도록 octet-stream 고정
     // (지정 안 하면 Spring이 요청의 Accept 헤더를 보고 엉뚱한 Content-Type을 추론할 수 있음)

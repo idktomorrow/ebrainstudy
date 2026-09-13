@@ -229,6 +229,13 @@ cd ..
       버그는 아니었지만 테스트 공백이었으므로 `.andExpect(jsonPath("$.updatedAt")
       .exists())` 검증을 라이프사이클 테스트에 보강.
 
-전체 68개 테스트 통과 (Category 2 + Board 20 + Comment 8 + Attachment 14 +
-BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 7 +
+- [x] **버그 발견/수정: 첨부파일 다운로드 시 파일명에 공백이 있으면 `+`로 깨짐.**
+      `Content-Disposition`의 `filename*=UTF-8''...` 값을 `URLEncoder.encode()`로
+      만들었는데, 이건 폼 인코딩 규칙이라 공백을 `%20`이 아니라 `+`로 바꿔버림. RFC 5987의
+      `filename*=` 값에서는 `+`가 공백으로 해석되지 않아서, 공백 포함 파일명을 업로드하면
+      다운로드 시 파일명에 공백 대신 `+`가 그대로 남는 문제. `URLEncoder.encode()` 결과의
+      `+`를 `%20`으로 치환하도록 수정. `AttachmentControllerTest`에 회귀 테스트 추가.
+
+전체 69개 테스트 통과 (Category 2 + Board 20 + Comment 8 + Attachment 14 +
+BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 5 + AttachmentIntegrationTest 2).
