@@ -323,7 +323,27 @@ class BoardServiceTest {
 
       assertThatThrownBy(() -> boardService.getBoardList(condition))
           .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("페이지당 건수는 1 이상이어야 합니다.");
+          .hasMessage("페이지당 건수는 1 이상 100 이하여야 합니다.");
+    }
+
+    @Test
+    @DisplayName("페이지당 건수가 100을 넘으면 예외가 발생한다")
+    void failsWhenSizeExceedsMax() {
+      BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 101);
+
+      assertThatThrownBy(() -> boardService.getBoardList(condition))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("페이지당 건수는 1 이상 100 이하여야 합니다.");
+    }
+
+    @Test
+    @DisplayName("(page-1)*size가 int 범위를 넘으면 예외가 발생한다 (LIMIT 오버플로 방지)")
+    void failsWhenPaginationOverflows() {
+      BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 30_000_000, 100);
+
+      assertThatThrownBy(() -> boardService.getBoardList(condition))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("페이지 번호가 너무 큽니다.");
     }
 
     @Test

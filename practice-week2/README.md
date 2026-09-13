@@ -236,6 +236,16 @@ cd ..
       다운로드 시 파일명에 공백 대신 `+`가 그대로 남는 문제. `URLEncoder.encode()` 결과의
       `+`를 `%20`으로 치환하도록 수정. `AttachmentControllerTest`에 회귀 테스트 추가.
 
-전체 69개 테스트 통과 (Category 2 + Board 20 + Comment 8 + Attachment 14 +
+- [x] **버그 발견/수정: 페이지네이션에 상한이 없어서 큰 `size`/`page` 값에 정수 오버플로가
+      발생, SQL 문법 에러(500)로 이어짐.** `LIMIT ${(page-1)*size}, ${size}`를 MyBatis가
+      int 연산으로 계산하는데, `page=3&size=2000000000`처럼 큰 값을 보내면
+      `(page-1)*size`가 int 범위를 넘겨 음수로 오버플로 → `LIMIT -294967296, 2000000000`
+      같은 잘못된 SQL이 만들어져 500으로 응답됨. 실제로 서버 띄워서 curl로 재현 확인
+      (로그에 `SQLSyntaxErrorException` 남는 것까지 확인). `size` 상한(100)을 추가하고,
+      `size`가 상한 이내여도 `page`가 극단적으로 크면 오버플로가 재현될 수 있어
+      `(page-1)*size`를 long으로 미리 계산해 오버플로 자체를 막도록 검증 추가.
+      `BoardServiceTest`에 회귀 테스트 2개 추가.
+
+전체 71개 테스트 통과 (Category 2 + Board 22 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 5 + AttachmentIntegrationTest 2).
