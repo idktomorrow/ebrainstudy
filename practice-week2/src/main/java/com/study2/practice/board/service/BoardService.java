@@ -157,14 +157,22 @@ public class BoardService {
     return new BoardListResponse(summaries, totalCount);
   }
 
+  private static final int MAX_PAGE_SIZE = 100;
+
   private void validatePagination(int page, int size) {
     // 음수/0이 그대로 SQL의 LIMIT ${(page-1)*size}, ${size}에 들어가면 SQL 문법 에러(500)로
     // 이어지므로, 여기서 미리 걸러서 400으로 응답되게 함
     if (page < 1) {
       throw new IllegalArgumentException("페이지 번호는 1 이상이어야 합니다.");
     }
-    if (size < 1) {
-      throw new IllegalArgumentException("페이지당 건수는 1 이상이어야 합니다.");
+    if (size < 1 || size > MAX_PAGE_SIZE) {
+      throw new IllegalArgumentException("페이지당 건수는 1 이상 " + MAX_PAGE_SIZE + " 이하여야 합니다.");
+    }
+    // size 상한을 둬도 page를 극단적으로 크게 보내면 (page-1)*size가 int 범위를 넘겨
+    // LIMIT에 음수가 들어가는 오버플로가 재현됨(예: page=3, size=2000000000) -> long으로
+    // 미리 계산해서 오버플로 자체를 막음
+    if ((long) (page - 1) * size > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("페이지 번호가 너무 큽니다.");
     }
   }
 
