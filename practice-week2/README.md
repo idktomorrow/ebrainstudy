@@ -246,6 +246,17 @@ cd ..
       `(page-1)*size`를 long으로 미리 계산해 오버플로 자체를 막도록 검증 추가.
       `BoardServiceTest`에 회귀 테스트 2개 추가.
 
-전체 71개 테스트 통과 (Category 2 + Board 22 + Comment 8 + Attachment 14 +
+- [x] **버그 발견/수정: 검색어의 `%`/`_`가 LIKE 와일드카드로 해석돼서 엉뚱한 결과가
+      나오던 문제.** `title LIKE CONCAT('%', #{keyword}, '%')`에서 키워드를 이스케이프
+      없이 그대로 넣다 보니, 예를 들어 검색어로 `%`를 넣으면 패턴이 `'%%%'`가 돼서
+      실제로는 `%`가 안 들어간 게시글까지 전부 매칭돼버림. `_`도 마찬가지로 "아무 문자
+      1개"로 해석돼서 거의 모든 게시글이 걸림. 실제로 서버 띄워서 curl로 재현 확인
+      (검색어 `%` → 전체 2건 매칭, 수정 후 → `%`가 실제로 포함된 1건만 매칭). MySQL이
+      LIKE에서 기본으로 쓰는 escape 문자(`\`)를 이용해 `\`, `%`, `_` 앞에 `\`를 붙여
+      리터럴로 취급되게 `BoardService.escapeKeywordForLike()` 추가. `BoardServiceTest`에
+      이스케이프 검증(Mapper로 전달되는 값 확인) + `BoardIntegrationTest`에 실제 DB로
+      리터럴 매칭 확인하는 테스트 추가.
+
+전체 73개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
 BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
-BoardIntegrationTest 5 + AttachmentIntegrationTest 2).
+BoardIntegrationTest 6 + AttachmentIntegrationTest 2).

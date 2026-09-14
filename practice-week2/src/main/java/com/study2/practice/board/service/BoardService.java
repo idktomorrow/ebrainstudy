@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BoardService {
 
+  private static final int MAX_PAGE_SIZE = 100;
+
   private final BoardMapper boardMapper;
   private final CategoryMapper categoryMapper;   // 카테고리 이름 조회용으로 추가 주입
   private final AttachmentService attachmentService;   // 상세 조회 시 첨부파일 목록 조회, 삭제 시 디스크 파일 정리용
@@ -134,8 +136,9 @@ public class BoardService {
 
     validatePagination(condition.page(), condition.size());
 
-    List<Board> boards = boardMapper.findAll(condition);
-    int totalCount = boardMapper.countAll(condition);
+    BoardSearchRequest escapedCondition = escapeKeywordForLike(condition);
+    List<Board> boards = boardMapper.findAll(escapedCondition);
+    int totalCount = boardMapper.countAll(escapedCondition);
 
     // 카테고리 이름을 게시글마다 매번 조회하면 N번 쿼리가 나가니, 한 번에 다 가져와서 Map으로 매칭
     Map<Integer, String> categoryNames = categoryMapper.findAll().stream()
@@ -157,7 +160,23 @@ public class BoardService {
     return new BoardListResponse(summaries, totalCount);
   }
 
-  private static final int MAX_PAGE_SIZE = 100;
+  /**
+   * 검색어에 LIKE의 와일드카드 문자(%, _)가 그대로 들어있으면, "평범한 특수문자 검색"이
+   * 아니라 패턴으로 해석돼버림 — 예를 들어 키워드로 "%"를 검색하면 CONCAT('%', '%', '%')가
+   * '%%%' 패턴이 돼서 모든 게시글이 매칭돼버림(실제로 curl로 재현 확인). MySQL은 LIKE에서
+   * '\'를 기본 escape 문자로 쓰므로, %/_/\\ 앞에 '\'를 붙여서 리터럴로 취급되게 만든다.
+   */
+  private BoardSearchRequest escapeKeywordForLike(BoardSearchRequest condition) {
+    if (condition.keyword() == null) {
+      return condition;
+    }
+    String escaped = condition.keyword()
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_");
+    return new BoardSearchRequest(escaped, condition.categoryId(), condition.startDate(),
+        condition.endDate(), condition.page(), condition.size());
+  }
 
   private void validatePagination(int page, int size) {
     // 음수/0이 그대로 SQL의 LIMIT ${(page-1)*size}, ${size}에 들어가면 SQL 문법 에러(500)로

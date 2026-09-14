@@ -27,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -362,6 +363,21 @@ class BoardServiceTest {
       assertThat(response.boards()).hasSize(1);
       assertThat(response.boards().get(0).categoryName()).isEqualTo("공지");
       assertThat(response.boards().get(0).hasAttachment()).isTrue();
+    }
+
+    @Test
+    @DisplayName("검색어에 %, _, \\가 있으면 LIKE 와일드카드로 해석되지 않도록 이스케이프해서 Mapper에 전달한다")
+    void escapesLikeWildcardsInKeyword() {
+      BoardSearchRequest condition = new BoardSearchRequest("50%_off\\test", null, null, null, 1, 10);
+      when(boardMapper.findAll(any())).thenReturn(List.of());
+      when(boardMapper.countAll(any())).thenReturn(0);
+      when(categoryMapper.findAll()).thenReturn(List.of());
+
+      boardService.getBoardList(condition);
+
+      ArgumentCaptor<BoardSearchRequest> captor = ArgumentCaptor.forClass(BoardSearchRequest.class);
+      verify(boardMapper).findAll(captor.capture());
+      assertThat(captor.getValue().keyword()).isEqualTo("50\\%\\_off\\\\test");
     }
 
     @Test

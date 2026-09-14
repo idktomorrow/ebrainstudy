@@ -172,6 +172,31 @@ class BoardIntegrationTest {
   }
 
   @Test
+  @DisplayName("검색어의 %, _가 LIKE 와일드카드로 해석되지 않고 리터럴로 매칭된다")
+  void search_treatsPercentAndUnderscoreAsLiteralCharacters() throws Exception {
+    // '%'/'_' 이스케이프 전에는 keyword="%" 검색 시 패턴이 '%%%'가 돼서 아래 둘 다
+    // 걸려버렸다 (실제로 curl로 재현 확인). 진짜 %가 든 글만 나와야 정상.
+    createBoard(1, "김철수", "Discount 50% off today", "특가 안내입니다");
+    createBoard(1, "이영희", "평범한 제목입니다", "평범한 내용입니다");
+
+    mockMvc.perform(get("/api/boards")
+            .param("keyword", "%")
+            .param("page", "1")
+            .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalCount").value(1))
+        .andExpect(jsonPath("$.boards[0].title").value("Discount 50% off today"));
+
+    // '_'도 마찬가지로 리터럴 취급돼서, 실제로 밑줄이 없는 두 글 다 안 나와야 함
+    mockMvc.perform(get("/api/boards")
+            .param("keyword", "_")
+            .param("page", "1")
+            .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalCount").value(0));
+  }
+
+  @Test
   @DisplayName("같은 초에 여러 게시글이 등록돼도 최신순 정렬이 안정적으로 유지된다")
   void findAll_ordersStably_evenWhenCreatedInSameSecond() throws Exception {
     // created_at은 DATETIME이라 초 단위까지만 저장됨. 테스트 안에서 연달아 등록하면
