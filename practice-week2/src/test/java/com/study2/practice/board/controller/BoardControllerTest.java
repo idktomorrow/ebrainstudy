@@ -3,6 +3,7 @@ package com.study2.practice.board.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -74,6 +75,22 @@ class BoardControllerTest {
     // 500으로 잡아채고 있었음. 지금은 400으로 나가야 정상이다.
     mockMvc.perform(get("/api/boards").param("page", "abc").param("size", "10"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 URL로 요청하면 404로 응답된다 (NoResourceFoundException이 500으로 잡히던 버그의 회귀 테스트)")
+  void unknownUrl_returns404() throws Exception {
+    mockMvc.perform(get("/api/boards/no-such-path/deeper"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404));
+  }
+
+  @Test
+  @DisplayName("지원하지 않는 HTTP 메서드로 요청하면 405로 응답된다 (HttpRequestMethodNotSupportedException이 500으로 잡히던 버그의 회귀 테스트)")
+  void unsupportedMethod_returns405() throws Exception {
+    mockMvc.perform(patch("/api/boards"))
+        .andExpect(status().isMethodNotAllowed())
+        .andExpect(jsonPath("$.status").value(405));
   }
 
   @Test
