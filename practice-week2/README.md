@@ -257,6 +257,17 @@ cd ..
       이스케이프 검증(Mapper로 전달되는 값 확인) + `BoardIntegrationTest`에 실제 DB로
       리터럴 매칭 확인하는 테스트 추가.
 
-전체 73개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
-BoardController 4 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
+- [x] **버그 발견/수정: 존재하지 않는 URL / 지원하지 않는 HTTP 메서드가 404/405가 아니라
+      500으로 응답되던 문제.** `GlobalExceptionHandler`의 catch-all `Exception` 핸들러가
+      Spring이 자동으로 던지는 `NoResourceFoundException`(매핑되는 핸들러도 정적 리소스도
+      없을 때, 404여야 함)과 `HttpRequestMethodNotSupportedException`(경로는 있는데
+      메서드가 안 맞을 때, 405여야 함)까지 가로채서 500으로 바꿔버리고 있었음 — 첫 번째로
+      고쳤던 버그(타입 변환 실패 등)와 같은 원인 패턴이 여기서도 재발한 것. 실제로 curl로
+      `GET /api/nonexistent`, `PATCH /api/boards`를 호출해서 500이 나는 것과 서버 로그의
+      정확한 예외 타입까지 확인 후, 두 예외를 구체적으로 처리하는 핸들러를 catch-all보다
+      먼저 추가해서 각각 404/405로 응답되도록 수정. `BoardControllerTest`에 회귀 테스트
+      2개 추가.
+
+전체 75개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
+BoardController 6 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
