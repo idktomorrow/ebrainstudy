@@ -94,6 +94,16 @@ class BoardControllerTest {
   }
 
   @Test
+  @DisplayName("지원하지 않는 Content-Type으로 요청하면 415로 응답된다 (HttpMediaTypeNotSupportedException이 500으로 잡히던 버그의 회귀 테스트)")
+  void unsupportedContentType_returns415() throws Exception {
+    mockMvc.perform(post("/api/boards")
+            .contentType(MediaType.APPLICATION_XML)
+            .content("<xml/>"))
+        .andExpect(status().isUnsupportedMediaType())
+        .andExpect(jsonPath("$.status").value(415));
+  }
+
+  @Test
   @DisplayName("정상 요청이면 200과 함께 등록된 게시글 id를 반환한다")
   void createBoard_returns200_onSuccess() throws Exception {
     when(boardService.createBoard(any())).thenReturn(42);

@@ -268,6 +268,15 @@ cd ..
       먼저 추가해서 각각 404/405로 응답되도록 수정. `BoardControllerTest`에 회귀 테스트
       2개 추가.
 
-전체 75개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
-BoardController 6 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
+- [x] **버그 발견/수정: 지원하지 않는 Content-Type으로 요청하면 415가 아니라 500으로
+      응답되던 문제.** 바로 앞의 404/405 버그와 같은 원인(catch-all `Exception` 핸들러가
+      Spring이 자동으로 던지는 프레임워크 예외를 가로챔)이 이번엔 요청 쪽 콘텐츠 협상에서도
+      재발함 — `Content-Type: application/xml`로 JSON을 받는 API에 요청하면
+      `HttpMediaTypeNotSupportedException`(원래 415)이 catch-all에 잡혀서 500이 나감.
+      (참고로 응답 쪽 `Accept` 헤더로 인한 406은 이미 정상 동작하는 것도 함께 확인함.)
+      구체적인 핸들러를 추가해서 415로 응답되도록 수정. `BoardControllerTest`에 회귀
+      테스트 추가.
+
+전체 76개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
+BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
