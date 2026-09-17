@@ -147,10 +147,19 @@ public class AttachmentService {
     return attachment;
   }
 
-  /** 실제 파일 리소스를 읽어온다 (Controller가 바이너리 응답을 만들 때 사용). */
+  /**
+   * 실제 파일 리소스를 읽어온다 (Controller가 바이너리 응답을 만들 때 사용).
+   * DB 메타데이터는 있는데 디스크 파일만 없는 경우(예: 외부에서 수동으로 지운 경우) 존재
+   * 확인 없이 그냥 UrlResource를 만들면, Spring이 나중에 응답을 스트리밍하려는 시점에서야
+   * FileNotFoundException이 터져서 500으로 응답돼버림(실제 재현 확인). 여기서 미리
+   * 존재를 확인해서 404로 응답되게 한다.
+   */
   public Resource loadFileAsResource(Attachment attachment) {
+    Path path = Path.of(attachment.getFilePath());
+    if (!Files.exists(path)) {
+      throw new NoSuchElementException("파일을 찾을 수 없습니다: " + attachment.getOriginName());
+    }
     try {
-      Path path = Path.of(attachment.getFilePath());
       return new UrlResource(path.toUri());
     } catch (IOException e) {
       throw new UncheckedIOException("파일을 읽을 수 없습니다: " + attachment.getOriginName(), e);
