@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,6 +81,19 @@ public class GlobalExceptionHandler {
     return ResponseEntity
         .status(HttpStatus.METHOD_NOT_ALLOWED)
         .body(new ErrorResponse(HttpStatus.METHOD_NOT_ALLOWED.value(), "지원하지 않는 HTTP 메서드입니다."));
+  }
+
+  /**
+   * 지원하지 않는 Content-Type으로 요청(예: JSON을 받는 API에 application/xml로 요청) -> 415.
+   * 이것도 catch-all Exception 핸들러가 가로채면 500으로 바뀌던 문제가 있어서 분리.
+   * (Accept 헤더로 인한 HttpMediaTypeNotAcceptableException/406은 이 catch-all에 걸리기
+   * 전에 Spring이 먼저 처리해서 이미 정상적으로 406이 나가는 것까지 확인함)
+   */
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException e) {
+    return ResponseEntity
+        .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+        .body(new ErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "지원하지 않는 Content-Type입니다."));
   }
 
   /** 그 외 예상 못한 예외 -> 500. 클라이언트에는 상세 원인을 알려주지 않고 서버 로그에만 남김 */
