@@ -221,6 +221,18 @@ class AttachmentServiceTest {
         assertThat(in.readAllBytes()).isEqualTo(content);
       }
     }
+
+    @Test
+    @DisplayName("DB엔 메타데이터가 있는데 디스크 파일만 없으면 예외가 발생한다 (존재 확인 없이 UrlResource를 만들면, "
+        + "스트리밍 시점에야 FileNotFoundException이 터져서 500으로 응답되던 버그의 회귀 테스트)")
+    void loadFileAsResource_failsWhenDiskFileMissing() {
+      Path missingFile = tempDir.resolve("never-written.txt");
+      Attachment attachment = new Attachment(1, 1, "test.txt", "stored.txt",
+          missingFile.toString(), 10L, "txt");
+
+      assertThatThrownBy(() -> attachmentService.loadFileAsResource(attachment))
+          .isInstanceOf(NoSuchElementException.class);
+    }
   }
 
   @Nested

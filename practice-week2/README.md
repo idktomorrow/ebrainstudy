@@ -277,6 +277,15 @@ cd ..
       구체적인 핸들러를 추가해서 415로 응답되도록 수정. `BoardControllerTest`에 회귀
       테스트 추가.
 
-전체 76개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 14 +
+- [x] **버그 발견/수정: DB 메타데이터는 있는데 디스크 파일만 없어진 첨부파일을 다운로드하면
+      404가 아니라 500으로 응답되던 문제.** `AttachmentService.loadFileAsResource()`가
+      파일 존재 여부를 미리 확인하지 않고 바로 `UrlResource`를 만들어서 반환하다 보니,
+      Spring이 응답을 스트리밍하려는 시점에서야 `FileNotFoundException`이 터지고 이게
+      catch-all `Exception` 핸들러에 잡혀 500이 되던 것. 실제로 업로드된 파일을 디스크에서만
+      수동으로 지운 뒤 다운로드를 호출해서 500 + `FileNotFoundException` 로그까지 재현
+      확인. `Files.exists()`로 미리 확인해서 없으면 `NoSuchElementException`(기존 404
+      매핑 재사용)을 던지도록 수정. `AttachmentServiceTest`에 회귀 테스트 추가.
+
+전체 77개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 15 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
