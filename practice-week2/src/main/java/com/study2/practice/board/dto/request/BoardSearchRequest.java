@@ -10,7 +10,7 @@ import java.time.LocalDate;
  * @param startDate   등록일 검색 시작일. null이면 조건 없음
  * @param endDate     등록일 검색 종료일
  * @param page        페이지 번호 (1부터 시작)
- * @param size        페이지당 건수 (기본 10)
+ * @param size        페이지당 건수 (기본 10, 최대 100)
  */
 public record BoardSearchRequest(
     String keyword,

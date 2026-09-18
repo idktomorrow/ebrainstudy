@@ -289,3 +289,11 @@ cd ..
 전체 77개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 15 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
+
+- [x] **자잘한 정리 (버그는 아님).** `BoardSearchRequest`의 javadoc이 이전에 추가한
+      `size` 상한(100)을 반영 안 하고 있어서 보강. `CategoryController`만 다른 컨트롤러와
+      달리 닫는 중괄호 앞에 불필요한 빈 줄이 있던 것 통일. `GlobalExceptionHandler`의
+      `MissingServletRequestPartException` 처리가 얼핏 죽은 코드처럼 보여서 제거하려다가,
+      실제로는 `@RequestParam("files") List<MultipartFile>`처럼 파일 파라미터를
+      `@RequestParam`으로 받아도 그 파트 자체가 빠지면 Spring이 이 예외를 던진다는 걸 직접
+      재현해서 확인 — 실수로 지울 뻔했던 비직관적인 이유를 주석으로 남겨둠.

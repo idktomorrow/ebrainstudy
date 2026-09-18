@@ -45,6 +45,10 @@ public class GlobalExceptionHandler {
    * (타입 변환 실패, JSON 파싱 실패, 필수 파라미터/멀티파트 파트 누락 등)
    * 아래에 있는 catch-all Exception 핸들러가 이런 프레임워크 예외까지 전부
    * 500으로 잡아채는 문제가 있어서, 더 구체적인 이 핸들러를 따로 둠.
+   * (MissingServletRequestPartException은 얼핏 죽은 코드처럼 보일 수 있음 — 이 프로젝트는
+   * @RequestPart를 쓴 적이 없어서. 그런데 @RequestParam("files") List<MultipartFile>처럼
+   * 파일 파라미터를 @RequestParam으로 받아도, 그 파트 자체가 요청에서 아예 빠지면 Spring이
+   * MissingServletRequestParameterException이 아니라 이 예외를 던짐 — 실제로 재현 확인함)
    */
   @ExceptionHandler({
       MethodArgumentTypeMismatchException.class,
