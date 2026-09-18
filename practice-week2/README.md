@@ -16,7 +16,8 @@ cd ..
 
 | 항목 | 값 |
 |---|---|
-| Port | `3309` |
+| App Port | `8080` |
+| DB Port | `3309` |
 | Database | `practice_week2` |
 | User / Password | `practice` / `practice` |
 
@@ -100,8 +101,12 @@ cd ..
 - [x] `global/exception/GlobalExceptionHandler` (`@RestControllerAdvice`)
   - [x] `IllegalArgumentException` -> 400 (검증 실패, 비밀번호 불일치)
   - [x] `NoSuchElementException` -> 404 (존재하지 않는 리소스)
+  - [x] 프레임워크 예외 -> 400 (타입 변환 실패, JSON 파싱 실패, 필수 파라미터/멀티파트 파트 누락 등)
+  - [x] `NoResourceFoundException` -> 404 (존재하지 않는 URL)
+  - [x] `HttpRequestMethodNotSupportedException` -> 405 (지원하지 않는 HTTP 메서드)
+  - [x] `HttpMediaTypeNotSupportedException` -> 415 (지원하지 않는 Content-Type)
   - [x] 그 외 `Exception` -> 500 (원인은 서버 로그에만 남기고 클라이언트엔 상세 노출 안 함)
-- [x] 실제 호출로 400/404/200 전부 확인 완료
+- [x] 실제 호출로 400/404/405/415/200 전부 확인 완료
 
 ### 6. 전체 버그 점검에서 발견/수정한 것
 - [x] **전역 예외 처리기가 Spring 프레임워크 자체의 400 에러까지 500으로 덮어쓰던 버그.**

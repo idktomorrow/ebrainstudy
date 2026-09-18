@@ -24,7 +24,7 @@ CREATE TABLE `board` (
                          `password`    VARCHAR(255) NOT NULL,             -- 수정/삭제용 비밀번호 (평문 저장)
                          `view_count`  INT NOT NULL DEFAULT 0,            -- 조회수 (상세 조회 시 증가)
                          `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 최초 등록일시
-                         `updated_at`  DATETIME NULL                      -- 수정일시. 수정 이력 없으면 NULL(응답 시 '-'로 변환)
+                         `updated_at`  DATETIME NULL                      -- 수정일시. 수정 이력 없으면 NULL (API 응답에도 null 그대로 내려감)
 );
 
 -- 첨부파일: 게시글 1 : 첨부파일 N. 게시글 삭제 시 함께 삭제됨
