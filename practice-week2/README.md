@@ -16,7 +16,8 @@ cd ..
 
 | 항목 | 값 |
 |---|---|
-| Port | `3309` |
+| App Port | `8080` |
+| DB Port | `3309` |
 | Database | `practice_week2` |
 | User / Password | `practice` / `practice` |
 
@@ -100,8 +101,12 @@ cd ..
 - [x] `global/exception/GlobalExceptionHandler` (`@RestControllerAdvice`)
   - [x] `IllegalArgumentException` -> 400 (검증 실패, 비밀번호 불일치)
   - [x] `NoSuchElementException` -> 404 (존재하지 않는 리소스)
+  - [x] 프레임워크 예외 -> 400 (타입 변환 실패, JSON 파싱 실패, 필수 파라미터/멀티파트 파트 누락 등)
+  - [x] `NoResourceFoundException` -> 404 (존재하지 않는 URL)
+  - [x] `HttpRequestMethodNotSupportedException` -> 405 (지원하지 않는 HTTP 메서드)
+  - [x] `HttpMediaTypeNotSupportedException` -> 415 (지원하지 않는 Content-Type)
   - [x] 그 외 `Exception` -> 500 (원인은 서버 로그에만 남기고 클라이언트엔 상세 노출 안 함)
-- [x] 실제 호출로 400/404/200 전부 확인 완료
+- [x] 실제 호출로 400/404/405/415/200 전부 확인 완료
 
 ### 6. 전체 버그 점검에서 발견/수정한 것
 - [x] **전역 예외 처리기가 Spring 프레임워크 자체의 400 에러까지 500으로 덮어쓰던 버그.**
@@ -289,3 +294,11 @@ cd ..
 전체 77개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 15 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
+
+- [x] **자잘한 정리 (버그는 아님).** `BoardSearchRequest`의 javadoc이 이전에 추가한
+      `size` 상한(100)을 반영 안 하고 있어서 보강. `CategoryController`만 다른 컨트롤러와
+      달리 닫는 중괄호 앞에 불필요한 빈 줄이 있던 것 통일. `GlobalExceptionHandler`의
+      `MissingServletRequestPartException` 처리가 얼핏 죽은 코드처럼 보여서 제거하려다가,
+      실제로는 `@RequestParam("files") List<MultipartFile>`처럼 파일 파라미터를
+      `@RequestParam`으로 받아도 그 파트 자체가 빠지면 Spring이 이 예외를 던진다는 걸 직접
+      재현해서 확인 — 실수로 지울 뻔했던 비직관적인 이유를 주석으로 남겨둠.
