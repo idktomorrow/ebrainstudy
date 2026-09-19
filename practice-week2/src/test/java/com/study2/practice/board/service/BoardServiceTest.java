@@ -366,6 +366,22 @@ class BoardServiceTest {
     }
 
     @Test
+    @DisplayName("80번째 위치에 이모지가 걸려도 서로게이트 쌍을 반으로 자르지 않는다")
+    void truncateTitle_doesNotSplitSurrogatePair() {
+      BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
+      String title = "가".repeat(79) + "😀" + "나".repeat(10);
+      Board board = new Board(1, 1, title, "작성자", "내용", "pw", 0,
+          LocalDateTime.now(), null, false);
+      when(boardMapper.findAll(any())).thenReturn(List.of(board));
+      when(boardMapper.countAll(any())).thenReturn(1);
+      when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
+
+      String resultTitle = boardService.getBoardList(condition).boards().get(0).title();
+
+      assertThat(resultTitle).isEqualTo("가".repeat(79) + "😀...");
+    }
+
+    @Test
     @DisplayName("검색어에 %, _, \\가 있으면 LIKE 와일드카드로 해석되지 않도록 이스케이프해서 Mapper에 전달한다")
     void escapesLikeWildcardsInKeyword() {
       BoardSearchRequest condition = new BoardSearchRequest("50%_off\\test", null, null, null, 1, 10);

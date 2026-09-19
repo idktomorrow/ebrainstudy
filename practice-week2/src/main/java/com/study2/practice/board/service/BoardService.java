@@ -225,10 +225,14 @@ public class BoardService {
     }
   }
 
-  /** 목록 화면용 제목 축약. 80자 넘으면 '...'으로 줄임. */
+  /**
+   * 목록 화면용 제목 축약. 80자 넘으면 '...'으로 줄임.
+   * substring(0, 80)은 UTF-16 단위로 자르기 때문에, 80번째 위치에 이모지 같은 서로게이트 쌍이
+   * 걸리면 절반만 남은 깨진 문자가 응답에 실림(실제로 재현 확인) -> 코드포인트 단위로 자른다.
+   */
   private String truncateTitle(String title) {
-    if (title.length() > 80) {
-      return title.substring(0, 80) + "...";
+    if (title.codePointCount(0, title.length()) > 80) {
+      return title.substring(0, title.offsetByCodePoints(0, 80)) + "...";
     }
     return title;
   }
