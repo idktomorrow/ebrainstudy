@@ -291,7 +291,14 @@ cd ..
       확인. `Files.exists()`로 미리 확인해서 없으면 `NoSuchElementException`(기존 404
       매핑 재사용)을 던지도록 수정. `AttachmentServiceTest`에 회귀 테스트 추가.
 
-전체 77개 테스트 통과 (Category 2 + Board 23 + Comment 8 + Attachment 15 +
+- [x] **버그 발견/수정: 목록의 제목 축약이 이모지를 반으로 잘라 깨진 문자를 응답에 싣던 문제.**
+      `truncateTitle()`이 `substring(0, 80)`으로 UTF-16 단위로 잘라서, 80번째 위치에 이모지
+      같은 서로게이트 쌍(2 char)이 걸리면 절반만 남은 짝 없는 서로게이트(`\uD83D`)가 JSON
+      응답에 그대로 실림 — 엄격한 JSON 파서에선 파싱 오류/깨진 문자(�)가 됨. 가 79자 + 😀로 만든
+      제목으로 실제 재현 확인(응답 끝이 `\uD83D...`). `codePointCount`/`offsetByCodePoints`로
+      코드포인트 단위로 자르도록 수정, `BoardServiceTest`에 회귀 테스트 추가.
+
+전체 78개 테스트 통과 (Category 2 + Board 24 + Comment 8 + Attachment 15 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
 
