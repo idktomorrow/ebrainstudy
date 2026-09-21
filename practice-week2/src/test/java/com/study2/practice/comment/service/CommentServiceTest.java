@@ -1,6 +1,7 @@
 package com.study2.practice.comment.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -99,6 +100,32 @@ class CommentServiceTest {
       assertThatThrownBy(() -> commentService.createComment(1, request))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("댓글 내용은 2000자 이하여야 합니다.");
+    }
+
+    @Test
+    @DisplayName("상한 경계값(작성자 50자, 내용 2000자)까지는 등록된다")
+    void succeedsAtUpperBoundaries() {
+      when(boardMapper.findById(1)).thenReturn(new Board());
+      CommentCreateRequest request = new CommentCreateRequest("a".repeat(50), "b".repeat(2000));
+
+      assertThatCode(() -> commentService.createComment(1, request)).doesNotThrowAnyException();
+
+      verify(commentMapper).insert(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("작성자/내용이 null로 들어와도 NPE가 아니라 검증 예외가 발생한다")
+    void failsWithValidationErrorWhenFieldsAreNull() {
+      when(boardMapper.findById(1)).thenReturn(new Board());
+
+      assertThatThrownBy(() -> commentService.createComment(1, new CommentCreateRequest(null, "내용입니다")))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("작성자를 입력해주세요.");
+      assertThatThrownBy(() -> commentService.createComment(1, new CommentCreateRequest("이순신", null)))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("댓글 내용을 입력해주세요.");
+
+      verify(commentMapper, never()).insert(any(Comment.class));
     }
 
     @Test

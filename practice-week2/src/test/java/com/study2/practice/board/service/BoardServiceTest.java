@@ -1,10 +1,12 @@
 package com.study2.practice.board.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +22,7 @@ import com.study2.practice.category.entity.Category;
 import com.study2.practice.category.mapper.CategoryMapper;
 import com.study2.practice.file.entity.Attachment;
 import com.study2.practice.file.service.AttachmentService;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -154,6 +157,79 @@ class BoardServiceTest {
 
       verify(boardMapper, never()).insert(any(Board.class));
     }
+
+    @Test
+    @DisplayName("상한 경계값(작성자 4자, 제목 99자, 내용 1999자, 비밀번호 15자)까지는 등록된다")
+    void succeedsAtUpperBoundaries() {
+      BoardCreateRequest request = new BoardCreateRequest(1, "김철수님", "가".repeat(99),
+          "나".repeat(1999), "abcdefghijklm1!");
+      when(categoryMapper.findById(1)).thenReturn(new Category(1, "공지"));
+
+      assertThatCode(() -> boardService.createBoard(request)).doesNotThrowAnyException();
+
+      verify(boardMapper).insert(any(Board.class));
+    }
+
+    @Test
+    @DisplayName("상한 경계값을 1 넘으면(작성자 5자, 제목 100자, 내용 2000자, 비밀번호 16자) 각각 예외가 발생한다")
+    void failsJustOverUpperBoundaries() {
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수님아", "제목입니다", "내용은충분히깁니다", "abc123!@#"),
+          "작성자는 3자 이상 5자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "가".repeat(100), "내용은충분히깁니다", "abc123!@#"),
+          "제목은 4자 이상 100자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", "나".repeat(2000), "abc123!@#"),
+          "내용은 4자 이상 2000자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", "내용은충분히깁니다", "abcdefghijklmn1!"),
+          "비밀번호는 4자 이상 16자 미만이어야 합니다.");
+
+      verify(boardMapper, never()).insert(any(Board.class));
+    }
+
+    @Test
+    @DisplayName("비밀번호에 숫자가 없거나 영문이 없으면 예외가 발생한다")
+    void failsWhenPasswordMissingDigitOrLetter() {
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", "내용은충분히깁니다", "abcdefg!@#"),
+          "비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", "내용은충분히깁니다", "1234567!@#"),
+          "비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
+    }
+
+    @Test
+    @DisplayName("필드가 null로 들어와도 NPE가 아니라 검증 예외(400)가 발생한다")
+    void failsWithValidationErrorWhenFieldsAreNull() {
+      assertCreateRejected(
+          new BoardCreateRequest(1, null, "제목입니다", "내용은충분히깁니다", "abc123!@#"),
+          "작성자는 3자 이상 5자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", null, "내용은충분히깁니다", "abc123!@#"),
+          "제목은 4자 이상 100자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", null, "abc123!@#"),
+          "내용은 4자 이상 2000자 미만이어야 합니다.");
+      assertCreateRejected(
+          new BoardCreateRequest(1, "김철수", "제목입니다", "내용은충분히깁니다", null),
+          "비밀번호는 4자 이상 16자 미만이어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("categoryId가 null이면 예외가 발생한다")
+    void failsWhenCategoryIdIsNull() {
+      assertCreateRejected(
+          new BoardCreateRequest(null, "김철수", "제목입니다", "내용은충분히깁니다", "abc123!@#"),
+          "존재하지 않는 카테고리입니다.");
+    }
+
+    private void assertCreateRejected(BoardCreateRequest request, String expectedMessage) {
+      assertThatThrownBy(() -> boardService.createBoard(request))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage(expectedMessage);
+    }
   }
 
   @Nested
@@ -220,6 +296,36 @@ class BoardServiceTest {
 
       assertThatThrownBy(() -> boardService.updateBoard(1, request))
           .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    @DisplayName("수정 시에도 작성자/제목/내용 검증이 적용되고, 실패하면 수정하지 않는다")
+    void failsWhenUpdateFieldsAreInvalid() {
+      assertUpdateRejected(new BoardUpdateRequest("김", "제목입니다", "내용은충분히깁니다", "abc123!@#"),
+          "작성자는 3자 이상 5자 미만이어야 합니다.");
+      assertUpdateRejected(new BoardUpdateRequest("김철수", "    ", "내용은충분히깁니다", "abc123!@#"),
+          "제목은 4자 이상 100자 미만이어야 합니다.");
+      assertUpdateRejected(new BoardUpdateRequest("김철수", "제목입니다", null, "abc123!@#"),
+          "내용은 4자 이상 2000자 미만이어야 합니다.");
+
+      verify(boardMapper, never()).update(any(Board.class));
+    }
+
+    @Test
+    @DisplayName("비밀번호가 null로 들어오면 NPE가 아니라 비밀번호 불일치 예외가 발생한다")
+    void failsWithMismatchWhenPasswordIsNull() {
+      Board board = new Board(1, 1, "원래제목", "원작성자", "원내용", "abc123!@#", 0,
+          LocalDateTime.now(), null, null);
+      when(boardMapper.findById(1)).thenReturn(board);
+
+      assertUpdateRejected(new BoardUpdateRequest("김철수", "제목입니다", "내용은충분히깁니다", null),
+          "비밀번호가 일치하지 않습니다.");
+    }
+
+    private void assertUpdateRejected(BoardUpdateRequest request, String expectedMessage) {
+      assertThatThrownBy(() -> boardService.updateBoard(1, request))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage(expectedMessage);
     }
 
     @Test
@@ -363,6 +469,42 @@ class BoardServiceTest {
       assertThat(response.boards()).hasSize(1);
       assertThat(response.boards().get(0).categoryName()).isEqualTo("공지");
       assertThat(response.boards().get(0).hasAttachment()).isTrue();
+    }
+
+    @Test
+    @DisplayName("검색어 앞뒤 공백은 제거하고, 공백만 있는 검색어는 빈 문자열이 되어 조건에서 빠진다")
+    void trimsKeyword() {
+      when(boardMapper.findAll(any())).thenReturn(List.of());
+      when(boardMapper.countAll(any())).thenReturn(0);
+      when(categoryMapper.findAll()).thenReturn(List.of());
+
+      boardService.getBoardList(new BoardSearchRequest("  자바 스터디  ", null, null, null, 1, 10));
+      boardService.getBoardList(new BoardSearchRequest("   ", null, null, null, 1, 10));
+
+      ArgumentCaptor<BoardSearchRequest> captor = ArgumentCaptor.forClass(BoardSearchRequest.class);
+      verify(boardMapper, times(2)).findAll(captor.capture());
+      assertThat(captor.getAllValues())
+          .extracting(BoardSearchRequest::keyword)
+          .containsExactly("자바 스터디", "");   // 안쪽 공백은 그대로, 공백뿐이면 ""(XML에서 조건 제외)
+    }
+
+    @Test
+    @DisplayName("시작일이 종료일보다 늦으면 예외가 발생하고, 같은 날이면 허용된다")
+    void validatesDateRangeOrder() {
+      LocalDate today = LocalDate.of(2026, 9, 21);
+      BoardSearchRequest reversed =
+          new BoardSearchRequest(null, null, today, today.minusDays(1), 1, 10);
+
+      assertThatThrownBy(() -> boardService.getBoardList(reversed))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("시작일은 종료일보다 늦을 수 없습니다.");
+      verify(boardMapper, never()).findAll(any());
+
+      when(boardMapper.findAll(any())).thenReturn(List.of());
+      when(boardMapper.countAll(any())).thenReturn(0);
+      when(categoryMapper.findAll()).thenReturn(List.of());
+      assertThatCode(() -> boardService.getBoardList(
+          new BoardSearchRequest(null, null, today, today, 1, 10))).doesNotThrowAnyException();
     }
 
     @Test

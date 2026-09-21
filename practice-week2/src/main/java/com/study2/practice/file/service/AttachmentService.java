@@ -57,8 +57,9 @@ public class AttachmentService {
 
     // 저장 시작 전에 전부 검증 -> 하나라도 허용 안 되는 확장자/파일명이면 아무 파일도 저장하지 않고 통째로 거부
     files.forEach(file -> {
-      validateExtension(extractExtension(file.getOriginalFilename()));
-      validateOriginName(file.getOriginalFilename());
+      String originName = sanitizeOriginName(file.getOriginalFilename());
+      validateExtension(extractExtension(originName));
+      validateOriginName(originName);
     });
 
     return files.stream()
@@ -82,7 +83,7 @@ public class AttachmentService {
 
   private Integer uploadOne(Integer boardId, MultipartFile file) {
 
-    String originName = file.getOriginalFilename();
+    String originName = sanitizeOriginName(file.getOriginalFilename());
     String extension = extractExtension(originName);
     String storedName = UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
     Path targetPath;
@@ -124,6 +125,21 @@ public class AttachmentService {
     } catch (IOException ignored) {
       // 정리 실패는 무시 -> 원래 발생한 예외(DB 저장 실패)를 그대로 던지는 게 더 중요
     }
+  }
+
+  /**
+   * MultipartFile.getOriginalFilename()은 클라이언트가 보낸 값을 그대로 돌려주기 때문에
+   * '../../evil/x.txt'나 'C:/fakepath/x.txt'처럼 디렉터리 경로가 섞여 있을 수 있다(실제로 재현 확인).
+   * 서버 디스크엔 UUID 이름으로 저장해서 서버 쪽은 안전하지만, 이 값이 DB/상세 응답/다운로드 헤더로
+   * 그대로 나가면 파일명을 저장 경로로 그대로 쓰는 클라이언트에서 경로 이동에 악용될 수 있어서,
+   * 마지막 슬래시(/) 또는 역슬래시 뒤의 파일명 부분만 남긴다.
+   */
+  private String sanitizeOriginName(String originName) {
+    if (originName == null) {
+      return null;
+    }
+    int lastSeparator = Math.max(originName.lastIndexOf('/'), originName.lastIndexOf('\\'));
+    return originName.substring(lastSeparator + 1);
   }
 
   private String extractExtension(String originName) {
