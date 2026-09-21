@@ -298,10 +298,6 @@ cd ..
       제목으로 실제 재현 확인(응답 끝이 `\uD83D...`). `codePointCount`/`offsetByCodePoints`로
       코드포인트 단위로 자르도록 수정, `BoardServiceTest`에 회귀 테스트 추가.
 
-전체 78개 테스트 통과 (Category 2 + Board 24 + Comment 8 + Attachment 15 +
-BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
-BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
-
 - [x] **자잘한 정리 (버그는 아님).** `BoardSearchRequest`의 javadoc이 이전에 추가한
       `size` 상한(100)을 반영 안 하고 있어서 보강. `CategoryController`만 다른 컨트롤러와
       달리 닫는 중괄호 앞에 불필요한 빈 줄이 있던 것 통일. `GlobalExceptionHandler`의
@@ -309,3 +305,33 @@ BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
       실제로는 `@RequestParam("files") List<MultipartFile>`처럼 파일 파라미터를
       `@RequestParam`으로 받아도 그 파트 자체가 빠지면 Spring이 이 예외를 던진다는 걸 직접
       재현해서 확인 — 실수로 지울 뻔했던 비직관적인 이유를 주석으로 남겨둠.
+
+- [x] **버그 발견/수정: 첨부파일 원본 파일명에 디렉터리 경로가 섞여 그대로 저장/응답됨.**
+      `MultipartFile.getOriginalFilename()`은 클라이언트가 보낸 값 그대로라
+      `../../evil/dir/x.txt`를 보내면 DB, 게시글 상세 응답, 다운로드 헤더에 그대로 나갔음(직접
+      재현 확인). 디스크 저장명은 UUID라 서버는 안전하지만, 다운로드 헤더의 파일명을 저장 경로로
+      그대로 쓰는 클라이언트(스크립트 등)에선 경로 이동에 악용될 수 있음. 마지막 슬래시(`/`)나
+      역슬래시 뒤의 파일명 부분만 남기는 `sanitizeOriginName()` 추가(확장자/길이 검증도 정리된 이름
+      기준). `AttachmentServiceTest`에 회귀 테스트 2개 추가.
+
+- [x] **테스트 개선: 통합 테스트가 개발용 DB의 기존 데이터에 따라 실패할 수 있던 문제.**
+      `BoardIntegrationTest`의 검색/정렬 테스트가 "결과 전체 건수 == 1", "첫 번째 결과 == 방금 만든 글"처럼
+      DB 전체를 기준으로 단정해서, 개발하다 만든 실제 글이 하나만 있어도 실패함(오늘 등록된 글이 있으면
+      날짜 범위 테스트가 실패하는 것을 직접 재현). 테스트마다 고유 토큰을 제목에 넣고 keyword로 같이
+      검색해서 그 테스트가 만든 글만 대상으로 좁히도록 수정. `%`/`_` 테스트도 짝이 되는 글(`50X`, `aXb`)을
+      같이 만들어 와일드카드로 해석될 때만 걸리게 바꾸고, 이스케이프를 꺼서 실제로 실패하는지까지 확인.
+
+- [x] **테스트 보강: 경계값/null 검증.** 기존엔 "너무 짧은 경우"만 있고 상한 경계가 없었음.
+      게시글(작성자 4/5자, 제목 99/100자, 내용 1999/2000자, 비밀번호 15/16자, 숫자/영문 누락, null 필드,
+      수정 시 검증, null 비밀번호), 댓글(50자/2000자 경계, null), 첨부파일(파일명 500자 경계,
+      대문자 확장자, 확장자 없음/null 파일명) 테스트 추가.
+
+- [x] **개선 3건 (버그는 아님).** ① 검색어 앞뒤 공백 제거(`" 자바 "`처럼 실수로 들어간 공백이 리터럴로
+      검색돼 결과가 안 나오던 것, 공백뿐이면 조건에서 제외). ② `startDate`가 `endDate`보다 늦으면
+      빈 목록 대신 400("검색 결과 없음"과 "조건 오류"를 구분). ③ 목록 SQL(`findAll`)이 응답에 안 쓰는
+      본문(`content`, 최대 2000자)까지 행마다 읽어오던 것을 SELECT에서 제외. 단위 테스트 추가 + 실제 서버에서
+      세 가지 모두 확인.
+
+전체 93개 테스트 통과 (Category 2 + Board 33 + Comment 10 + Attachment 19 +
+BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
+BoardIntegrationTest 6 + AttachmentIntegrationTest 2).

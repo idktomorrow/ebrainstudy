@@ -13,6 +13,7 @@ import com.study2.practice.board.dto.request.BoardDeleteRequest;
 import com.study2.practice.board.dto.request.BoardUpdateRequest;
 import com.study2.practice.comment.dto.request.CommentCreateRequest;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,30 +115,36 @@ class BoardIntegrationTest {
         .andExpect(status().isNotFound());
   }
 
+  // 아래 검색/정렬 테스트들은 개발용 실제 DB를 그대로 쓰기 때문에, DB에 이미 다른 게시글이 있어도
+  // 결과가 흔들리지 않도록 테스트마다 고유 토큰(unique)을 제목에 넣고, 그 토큰을 keyword로 같이
+  // 검색해서 "이 테스트가 만든 글"만 결과 대상으로 좁힌다. (전체 건수/첫 번째 결과로 단정하면
+  // 개발 중에 만든 실제 글이 있을 때 테스트가 엉뚱하게 실패함)
+
   @Test
   @DisplayName("실제 DB에서 키워드/카테고리 필터가 적용된 검색 결과를 반환한다")
   void search_returnsFilteredResultsFromRealDatabase() throws Exception {
+    String unique = uniqueToken();
+    createBoard(1, "김철수", unique + " 자바 스터디 모집", "같이 공부해요");
+    createBoard(2, "이영희", unique + " 자유게시판 잡담", "그냥 아무거나 씁니다");
 
-    createBoard(1, "김철수", "자바 스터디 모집", "같이 공부해요");
-    createBoard(2, "이영희", "자유게시판 잡담", "그냥 아무거나 씁니다");
-
-    // "자바"로 검색하면 첫 번째 게시글만 나와야 함 (XML의 <if> 동적 조건 검증)
+    // 고유 토큰 + "자바"로 검색하면 첫 번째 게시글만 나와야 함 (XML의 <if> 동적 조건 검증)
     mockMvc.perform(get("/api/boards")
-            .param("keyword", "자바")
+            .param("keyword", unique + " 자바")
             .param("page", "1")
             .param("size", "10"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalCount").value(1))
-        .andExpect(jsonPath("$.boards[0].title").value("자바 스터디 모집"));
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 자바 스터디 모집"));
 
-    // 카테고리 2(자유)로 필터링하면 두 번째 게시글만 나와야 함
+    // 같은 토큰에 카테고리 2(자유)로 필터링하면 두 번째 게시글만 나와야 함
     mockMvc.perform(get("/api/boards")
+            .param("keyword", unique)
             .param("categoryId", "2")
             .param("page", "1")
             .param("size", "10"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalCount").value(1))
-        .andExpect(jsonPath("$.boards[0].title").value("자유게시판 잡담"));
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 자유게시판 잡담"));
   }
 
   @Test
@@ -147,22 +154,25 @@ class BoardIntegrationTest {
     // 등록일은 오늘이다. XML의 endDate 조건(DATE_ADD(...INTERVAL 1 DAY))이 실제로
     // "당일까지 포함"하는지는 Service 단위 테스트(Mapper mock)로는 검증이 안 되고,
     // 진짜 DB로만 확인할 수 있다.
-    createBoard(1, "김철수", "오늘 쓴 글", "오늘 작성했습니다");
+    String unique = uniqueToken();
+    createBoard(1, "김철수", unique + " 오늘 쓴 글", "오늘 작성했습니다");
     LocalDate today = LocalDate.now();
 
     // 오늘을 포함하는 범위로 검색하면 나와야 함 (endDate=오늘이 당일 끝까지 포함하는지 확인)
     mockMvc.perform(get("/api/boards")
+            .param("keyword", unique)
             .param("startDate", today.toString())
             .param("endDate", today.toString())
             .param("page", "1")
             .param("size", "10"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalCount").value(1))
-        .andExpect(jsonPath("$.boards[0].title").value("오늘 쓴 글"));
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 오늘 쓴 글"));
 
     // 오늘을 포함하지 않는 과거 범위로 검색하면 안 나와야 함
     LocalDate farPast = today.minusDays(10);
     mockMvc.perform(get("/api/boards")
+            .param("keyword", unique)
             .param("startDate", farPast.minusDays(5).toString())
             .param("endDate", farPast.toString())
             .param("page", "1")
@@ -174,26 +184,30 @@ class BoardIntegrationTest {
   @Test
   @DisplayName("검색어의 %, _가 LIKE 와일드카드로 해석되지 않고 리터럴로 매칭된다")
   void search_treatsPercentAndUnderscoreAsLiteralCharacters() throws Exception {
-    // '%'/'_' 이스케이프 전에는 keyword="%" 검색 시 패턴이 '%%%'가 돼서 아래 둘 다
-    // 걸려버렸다 (실제로 curl로 재현 확인). 진짜 %가 든 글만 나와야 정상.
-    createBoard(1, "김철수", "Discount 50% off today", "특가 안내입니다");
-    createBoard(1, "이영희", "평범한 제목입니다", "평범한 내용입니다");
+    // 이스케이프 전에는 keyword의 %/_가 패턴으로 해석돼서, 리터럴이 아닌 다른 글까지 걸렸다
+    // (실제로 curl로 재현 확인). 진짜 %/_가 든 글만 나와야 정상. 짝이 되는 "X"가 든 글을 같이
+    // 만들어두면 와일드카드로 해석될 때만 그 글이 걸리므로 구분이 된다.
+    String unique = uniqueToken();
+    createBoard(1, "김철수", unique + " Discount 50% off", "특가 안내입니다");
+    createBoard(1, "이영희", unique + " Discount 50X off", "특가 안내입니다");
+    createBoard(1, "박민수", unique + " name a_b", "밑줄 안내입니다");
+    createBoard(1, "최지우", unique + " name aXb", "밑줄 안내입니다");
 
     mockMvc.perform(get("/api/boards")
-            .param("keyword", "%")
+            .param("keyword", unique + " Discount 50%")
             .param("page", "1")
             .param("size", "10"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalCount").value(1))
-        .andExpect(jsonPath("$.boards[0].title").value("Discount 50% off today"));
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " Discount 50% off"));
 
-    // '_'도 마찬가지로 리터럴 취급돼서, 실제로 밑줄이 없는 두 글 다 안 나와야 함
     mockMvc.perform(get("/api/boards")
-            .param("keyword", "_")
+            .param("keyword", unique + " name a_b")
             .param("page", "1")
             .param("size", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalCount").value(0));
+        .andExpect(jsonPath("$.totalCount").value(1))
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " name a_b"));
   }
 
   @Test
@@ -202,16 +216,18 @@ class BoardIntegrationTest {
     // created_at은 DATETIME이라 초 단위까지만 저장됨. 테스트 안에서 연달아 등록하면
     // 셋 다 같은 초에 들어갈 가능성이 높은데, 그래도 순서가 흔들리면 안 된다
     // (ORDER BY created_at DESC, id DESC로 id를 2차 정렬 기준 삼아서 고친 부분의 검증)
-    createBoard(1, "김철수", "첫번째 글", "첫번째 내용입니다");
-    createBoard(1, "이영희", "두번째 글", "두번째 내용입니다");
-    createBoard(1, "박민수", "세번째 글", "세번째 내용입니다");
+    String unique = uniqueToken();
+    createBoard(1, "김철수", unique + " 첫번째 글", "첫번째 내용입니다");
+    createBoard(1, "이영희", unique + " 두번째 글", "두번째 내용입니다");
+    createBoard(1, "박민수", unique + " 세번째 글", "세번째 내용입니다");
 
     // 최신순(DESC)이니 나중에 등록한 게 먼저 나와야 함
-    mockMvc.perform(get("/api/boards").param("page", "1").param("size", "10"))
+    mockMvc.perform(get("/api/boards").param("keyword", unique).param("page", "1").param("size", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.boards[0].title").value("세번째 글"))
-        .andExpect(jsonPath("$.boards[1].title").value("두번째 글"))
-        .andExpect(jsonPath("$.boards[2].title").value("첫번째 글"));
+        .andExpect(jsonPath("$.totalCount").value(3))
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 세번째 글"))
+        .andExpect(jsonPath("$.boards[1].title").value(unique + " 두번째 글"))
+        .andExpect(jsonPath("$.boards[2].title").value(unique + " 첫번째 글"));
   }
 
   @Test
@@ -229,6 +245,10 @@ class BoardIntegrationTest {
         .andExpect(jsonPath("$[0].content").value("첫 댓글"))
         .andExpect(jsonPath("$[1].content").value("둘째 댓글"))
         .andExpect(jsonPath("$[2].content").value("셋째 댓글"));
+  }
+
+  private String uniqueToken() {
+    return UUID.randomUUID().toString().substring(0, 8);
   }
 
   private int createBoard(int categoryId, String writer, String title, String content) throws Exception {

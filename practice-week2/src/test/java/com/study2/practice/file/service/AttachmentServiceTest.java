@@ -1,11 +1,13 @@
 package com.study2.practice.file.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -117,6 +120,69 @@ class AttachmentServiceTest {
       assertThatThrownBy(() -> attachmentService.uploadFiles(1, List.of(file), "abc123!@#"))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("파일명이 너무 깁니다");
+    }
+
+    @Test
+    @DisplayName("확장자가 없거나 파일명이 null이면 허용되지 않는 형식으로 거부한다")
+    void failsWhenNoExtensionOrNullFilename() {
+      when(boardMapper.findById(1)).thenReturn(board);
+      MultipartFile noExtension = new MockMultipartFile("files", "README", "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+      MultipartFile nullName = new MockMultipartFile("files", null, "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+
+      assertThatThrownBy(() -> attachmentService.uploadFiles(1, List.of(noExtension), "abc123!@#"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("허용되지 않는 파일 형식");
+      assertThatThrownBy(() -> attachmentService.uploadFiles(1, List.of(nullName), "abc123!@#"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("허용되지 않는 파일 형식");
+
+      assertThat(tempDir).isEmptyDirectory();
+    }
+
+    @Test
+    @DisplayName("확장자 대소문자는 구분하지 않고, 파일명 500자까지는 허용한다")
+    void allowsUppercaseExtensionAndMaxLengthName() {
+      when(boardMapper.findById(1)).thenReturn(board);
+      String maxLengthName = "a".repeat(496) + ".TXT";   // 정확히 500자
+      MultipartFile file = new MockMultipartFile("files", maxLengthName, "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+
+      assertThatCode(() -> attachmentService.uploadFiles(1, List.of(file), "abc123!@#"))
+          .doesNotThrowAnyException();
+
+      verify(attachmentMapper).insert(any(Attachment.class));
+    }
+
+    @Test
+    @DisplayName("파일명에 디렉터리 경로가 섞여 있어도 파일명 부분만 저장한다 (../../x.txt, C:\\fakepath\\x.txt)")
+    void stripsDirectoryPartFromOriginName() {
+      when(boardMapper.findById(1)).thenReturn(board);
+      MultipartFile unixPath = new MockMultipartFile("files", "../../evil/dir/a.txt", "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+      MultipartFile windowsPath = new MockMultipartFile("files", "C:\\fakepath\\b.txt", "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+
+      attachmentService.uploadFiles(1, List.of(unixPath, windowsPath), "abc123!@#");
+
+      ArgumentCaptor<Attachment> captor = ArgumentCaptor.forClass(Attachment.class);
+      verify(attachmentMapper, times(2)).insert(captor.capture());
+      assertThat(captor.getAllValues())
+          .extracting(Attachment::getOriginName)
+          .containsExactly("a.txt", "b.txt");
+    }
+
+    @Test
+    @DisplayName("경로만 있고 파일명이 없으면(끝이 슬래시) 허용되지 않는 형식으로 거부한다")
+    void failsWhenNameEndsWithSeparator() {
+      when(boardMapper.findById(1)).thenReturn(board);
+      MultipartFile file = new MockMultipartFile("files", "dir.txt/", "text/plain",
+          "내용".getBytes(StandardCharsets.UTF_8));
+
+      assertThatThrownBy(() -> attachmentService.uploadFiles(1, List.of(file), "abc123!@#"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("허용되지 않는 파일 형식");
     }
 
     @Test

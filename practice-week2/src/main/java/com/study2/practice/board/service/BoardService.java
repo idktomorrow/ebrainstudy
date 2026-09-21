@@ -13,6 +13,7 @@ import com.study2.practice.category.entity.Category;
 import com.study2.practice.category.mapper.CategoryMapper;
 import com.study2.practice.file.dto.response.AttachmentResponse;
 import com.study2.practice.file.service.AttachmentService;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -135,6 +136,7 @@ public class BoardService {
   public BoardListResponse getBoardList(BoardSearchRequest condition) {
 
     validatePagination(condition.page(), condition.size());
+    validateDateRange(condition.startDate(), condition.endDate());
 
     BoardSearchRequest escapedCondition = escapeKeywordForLike(condition);
     List<Board> boards = boardMapper.findAll(escapedCondition);
@@ -170,7 +172,8 @@ public class BoardService {
     if (condition.keyword() == null) {
       return condition;
     }
-    String escaped = condition.keyword()
+    // 검색창에 실수로 들어간 앞뒤 공백(" 자바 ")이 리터럴로 검색돼서 결과가 안 나오는 걸 방지
+    String escaped = condition.keyword().trim()
         .replace("\\", "\\\\")
         .replace("%", "\\%")
         .replace("_", "\\_");
@@ -192,6 +195,14 @@ public class BoardService {
     // 미리 계산해서 오버플로 자체를 막음
     if ((long) (page - 1) * size > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("페이지 번호가 너무 큽니다.");
+    }
+  }
+
+  private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+    // 시작일이 종료일보다 늦으면 어떤 글도 조건에 맞을 수 없는데, 에러 없이 빈 목록만 내려가면
+    // 클라이언트는 "검색 결과가 없다"와 "조건을 잘못 보냈다"를 구분할 수 없음
+    if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+      throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
     }
   }
 
