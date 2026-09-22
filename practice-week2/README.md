@@ -334,10 +334,10 @@ cd ..
       존재 여부)만 있고 댓글 수가 빠져있었음 — 일반적인 게시판이라면 목록에서 댓글 수를
       같이 보여주는 게 자연스러운데 누락되어 있었음. `hasAttachment`와 같은 방식으로
       `findAll` SQL에 `(SELECT COUNT(*) FROM comment c WHERE c.board_id = board.id)`
-      서브쿼리를 추가해서, 게시글마다 댓글 수를 추가 조회 없이 한 번에 응답.
-      (이 기능의 테스트는 다음 PR에서 추가 예정 — 기존 테스트가 깨지지 않게 `Board` 생성자
-      호출부만 새 필드에 맞춰 정리함)
+      서브쿼리를 추가해서, 게시글마다 댓글 수를 추가 조회 없이 한 번에 응답. `BoardServiceTest`
+      단위 테스트 + `BoardIntegrationTest`에 실제 댓글을 달고 목록에서 정확한 수(댓글 있는
+      글/없는 글 둘 다)가 나오는지 확인하는 테스트 추가.
 
-전체 93개 테스트 통과 (Category 2 + Board 33 + Comment 10 + Attachment 19 +
+전체 94개 테스트 통과 (Category 2 + Board 33 + Comment 10 + Attachment 19 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
-BoardIntegrationTest 6 + AttachmentIntegrationTest 2).
+BoardIntegrationTest 7 + AttachmentIntegrationTest 2).

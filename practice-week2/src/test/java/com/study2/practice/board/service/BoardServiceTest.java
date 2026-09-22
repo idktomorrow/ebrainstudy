@@ -454,11 +454,11 @@ class BoardServiceTest {
     }
 
     @Test
-    @DisplayName("카테고리명을 매칭하고, 첨부파일 존재 여부를 boolean으로 변환해서 응답한다")
-    void mapsCategoryNameAndHasAttachment() {
+    @DisplayName("카테고리명을 매칭하고, 첨부파일 존재 여부와 댓글 수를 함께 응답한다")
+    void mapsCategoryNameAndHasAttachmentAndCommentCount() {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       Board board = new Board(1, 1, "제목", "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, true, 0);
+          LocalDateTime.now(), null, true, 3);
       when(boardMapper.findAll(condition)).thenReturn(List.of(board));
       when(boardMapper.countAll(condition)).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
@@ -469,6 +469,7 @@ class BoardServiceTest {
       assertThat(response.boards()).hasSize(1);
       assertThat(response.boards().get(0).categoryName()).isEqualTo("공지");
       assertThat(response.boards().get(0).hasAttachment()).isTrue();
+      assertThat(response.boards().get(0).commentCount()).isEqualTo(3);
     }
 
     @Test
