@@ -252,7 +252,7 @@ class BoardServiceTest {
       // given: DB엔 조회수 5로 저장돼 있다고 가정. increaseViewCount를 호출해도 이 board
       // 객체 자체는 갱신되지 않는 상황(실제 버그였던 지점)을 그대로 재현한 것
       Board board = new Board(1, 1, "제목", "김철수", "내용", "pw", 5,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
       when(categoryMapper.findById(1)).thenReturn(new Category(1, "공지"));
       when(attachmentService.getAttachments(1)).thenReturn(List.of());
@@ -270,7 +270,7 @@ class BoardServiceTest {
     @DisplayName("첨부파일이 있으면 응답에 목록이 포함된다")
     void includesAttachments() {
       Board board = new Board(1, 1, "제목", "김철수", "내용", "pw", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
       when(categoryMapper.findById(1)).thenReturn(new Category(1, "공지"));
       when(attachmentService.getAttachments(1)).thenReturn(
@@ -315,7 +315,7 @@ class BoardServiceTest {
     @DisplayName("비밀번호가 null로 들어오면 NPE가 아니라 비밀번호 불일치 예외가 발생한다")
     void failsWithMismatchWhenPasswordIsNull() {
       Board board = new Board(1, 1, "원래제목", "원작성자", "원내용", "abc123!@#", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
 
       assertUpdateRejected(new BoardUpdateRequest("김철수", "제목입니다", "내용은충분히깁니다", null),
@@ -334,7 +334,7 @@ class BoardServiceTest {
       BoardUpdateRequest request =
           new BoardUpdateRequest("김철수", "제목입니다", "내용은충분히깁니다", "wrongpw!1");
       Board board = new Board(1, 1, "원래제목", "원작성자", "원내용", "abc123!@#", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
 
       assertThatThrownBy(() -> boardService.updateBoard(1, request))
@@ -350,7 +350,7 @@ class BoardServiceTest {
       BoardUpdateRequest request =
           new BoardUpdateRequest("박영희", "수정된 제목", "수정된 내용입니다", "abc123!@#");
       Board board = new Board(1, 1, "원래제목", "원작성자", "원내용", "abc123!@#", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
 
       boardService.updateBoard(1, request);
@@ -382,7 +382,7 @@ class BoardServiceTest {
     @DisplayName("비밀번호가 일치하지 않으면 아무것도 지우지 않는다")
     void failsWhenPasswordMismatch() {
       Board board = new Board(1, 1, "제목", "작성자", "내용", "abc123!@#", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
 
       assertThatThrownBy(() -> boardService.deleteBoard(1, new BoardDeleteRequest("wrongpw!1")))
@@ -398,7 +398,7 @@ class BoardServiceTest {
       // 첨부파일 디스크 정리를 게시글 삭제보다 먼저 해야 한다는 게 예전에 겪었던
       // "고아 파일" 버그의 핵심이라, 순서까지 InOrder로 검증한다.
       Board board = new Board(1, 1, "제목", "작성자", "내용", "abc123!@#", 0,
-          LocalDateTime.now(), null, null);
+          LocalDateTime.now(), null, null, 0);
       when(boardMapper.findById(1)).thenReturn(board);
 
       boardService.deleteBoard(1, new BoardDeleteRequest("abc123!@#"));
@@ -458,7 +458,7 @@ class BoardServiceTest {
     void mapsCategoryNameAndHasAttachment() {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       Board board = new Board(1, 1, "제목", "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, true);
+          LocalDateTime.now(), null, true, 0);
       when(boardMapper.findAll(condition)).thenReturn(List.of(board));
       when(boardMapper.countAll(condition)).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
@@ -513,7 +513,7 @@ class BoardServiceTest {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       String title = "가".repeat(79) + "😀" + "나".repeat(10);
       Board board = new Board(1, 1, title, "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, false);
+          LocalDateTime.now(), null, false, 0);
       when(boardMapper.findAll(any())).thenReturn(List.of(board));
       when(boardMapper.countAll(any())).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
@@ -544,7 +544,7 @@ class BoardServiceTest {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       String longTitle = "가".repeat(90);
       Board board = new Board(1, 1, longTitle, "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, false);
+          LocalDateTime.now(), null, false, 0);
       when(boardMapper.findAll(condition)).thenReturn(List.of(board));
       when(boardMapper.countAll(condition)).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));

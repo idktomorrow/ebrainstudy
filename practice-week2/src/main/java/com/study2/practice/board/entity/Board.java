@@ -26,5 +26,6 @@ public class Board {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean hasAttachment;   // 목록 조회 전용 필드. findAll의 EXISTS 서브쿼리 결과만 채워짐
+  private Integer commentCount;    // 목록 조회 전용 필드. findAll의 서브쿼리 COUNT 결과만 채워짐
 
 }
