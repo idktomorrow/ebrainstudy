@@ -211,6 +211,24 @@ class BoardIntegrationTest {
   }
 
   @Test
+  @DisplayName("목록 조회 시 게시글마다 실제 댓글 수가 함께 응답된다")
+  void findAll_includesActualCommentCount() throws Exception {
+    String unique = uniqueToken();
+    int boardWithComments = createBoard(1, "김철수", unique + " 댓글 많은 글", "댓글 수 확인용 게시글입니다");
+    int boardWithoutComments = createBoard(1, "이영희", unique + " 댓글 없는 글", "댓글이 하나도 없습니다");
+
+    addComment(boardWithComments, "이순신", "첫 댓글");
+    addComment(boardWithComments, "강감찬", "둘째 댓글");
+
+    mockMvc.perform(get("/api/boards").param("keyword", unique).param("page", "1").param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 댓글 없는 글"))
+        .andExpect(jsonPath("$.boards[0].commentCount").value(0))
+        .andExpect(jsonPath("$.boards[1].title").value(unique + " 댓글 많은 글"))
+        .andExpect(jsonPath("$.boards[1].commentCount").value(2));
+  }
+
+  @Test
   @DisplayName("같은 초에 여러 게시글이 등록돼도 최신순 정렬이 안정적으로 유지된다")
   void findAll_ordersStably_evenWhenCreatedInSameSecond() throws Exception {
     // created_at은 DATETIME이라 초 단위까지만 저장됨. 테스트 안에서 연달아 등록하면
