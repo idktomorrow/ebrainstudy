@@ -155,7 +155,8 @@ public class BoardService {
             board.getViewCount(),
             board.getCreatedAt(),
             board.getUpdatedAt(),
-            Boolean.TRUE.equals(board.getHasAttachment())
+            Boolean.TRUE.equals(board.getHasAttachment()),
+            board.getCommentCount() == null ? 0 : board.getCommentCount()
         ))
         .toList();
 

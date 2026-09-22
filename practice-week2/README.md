@@ -52,9 +52,7 @@ cd ..
   - [x] 수정 — 실제 호출 테스트 완료
   - [x] 삭제 (비밀번호 확인) — 실제 호출 테스트 완료 (틀린 비밀번호 거부까지 확인)
 
-**알려진 이슈**: 검증 실패/비밀번호 불일치 시 지금은 500(Internal Server Error)으로 응답함.
-`@RestControllerAdvice`로 전역 예외 처리 붙여서 400/404로 정리하는 작업이 남아있음
-(`IllegalArgumentException` -> 400, `NoSuchElementException` -> 404).
+(검증 실패/비밀번호 불일치가 한동안 500으로 응답되던 문제는 5번 섹션의 전역 예외 처리로 해결됨.)
 
 ### 3. Comment CRUD (등록/조회만)
 - [x] `entity/Comment`
@@ -331,6 +329,14 @@ cd ..
       빈 목록 대신 400("검색 결과 없음"과 "조건 오류"를 구분). ③ 목록 SQL(`findAll`)이 응답에 안 쓰는
       본문(`content`, 최대 2000자)까지 행마다 읽어오던 것을 SELECT에서 제외. 단위 테스트 추가 + 실제 서버에서
       세 가지 모두 확인.
+
+- [x] **기능 추가: 게시글 목록에 댓글 수(`commentCount`) 표시.** 목록엔 `hasAttachment`(첨부파일
+      존재 여부)만 있고 댓글 수가 빠져있었음 — 일반적인 게시판이라면 목록에서 댓글 수를
+      같이 보여주는 게 자연스러운데 누락되어 있었음. `hasAttachment`와 같은 방식으로
+      `findAll` SQL에 `(SELECT COUNT(*) FROM comment c WHERE c.board_id = board.id)`
+      서브쿼리를 추가해서, 게시글마다 댓글 수를 추가 조회 없이 한 번에 응답.
+      (이 기능의 테스트는 다음 PR에서 추가 예정 — 기존 테스트가 깨지지 않게 `Board` 생성자
+      호출부만 새 필드에 맞춰 정리함)
 
 전체 93개 테스트 통과 (Category 2 + Board 33 + Comment 10 + Attachment 19 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
