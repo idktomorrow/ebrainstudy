@@ -341,3 +341,11 @@ cd ..
 전체 94개 테스트 통과 (Category 2 + Board 33 + Comment 10 + Attachment 19 +
 BoardController 7 + CategoryController 2 + CommentController 4 + AttachmentController 8 +
 BoardIntegrationTest 7 + AttachmentIntegrationTest 2).
+
+- [x] **기능 추가: 게시글 목록의 `hasAttachment`(있다/없다)를 `attachmentCount`(개수)로 통일.**
+      댓글은 개수로 보여주면서 첨부파일은 여전히 boolean만 있는 게 일관성이 없었음 — 파일이
+      1개든 5개든 목록에서 구분이 안 됐음. `comment_count`와 같은 방식으로 `findAll` SQL의
+      `EXISTS` 서브쿼리를 `COUNT` 서브쿼리로 바꿔서 `attachment_count`를 붙이고,
+      `hasAttachment`는 제거. 실제로 파일 2개를 첨부한 게시글이 목록에 `attachmentCount:2`로
+      나오는 것까지 확인. (테스트는 댓글 수 때와 같은 방식으로 다음 PR에서 별도 추가 예정 —
+      기존 테스트가 깨지지 않게 호출부만 새 타입에 맞춰 정리함)

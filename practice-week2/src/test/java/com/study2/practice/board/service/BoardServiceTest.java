@@ -454,11 +454,11 @@ class BoardServiceTest {
     }
 
     @Test
-    @DisplayName("카테고리명을 매칭하고, 첨부파일 존재 여부와 댓글 수를 함께 응답한다")
-    void mapsCategoryNameAndHasAttachmentAndCommentCount() {
+    @DisplayName("카테고리명을 매칭하고, 댓글 수를 함께 응답한다")
+    void mapsCategoryNameAndCommentCount() {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       Board board = new Board(1, 1, "제목", "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, true, 3);
+          LocalDateTime.now(), null, 2, 3);
       when(boardMapper.findAll(condition)).thenReturn(List.of(board));
       when(boardMapper.countAll(condition)).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
@@ -468,7 +468,6 @@ class BoardServiceTest {
       assertThat(response.totalCount()).isEqualTo(1);
       assertThat(response.boards()).hasSize(1);
       assertThat(response.boards().get(0).categoryName()).isEqualTo("공지");
-      assertThat(response.boards().get(0).hasAttachment()).isTrue();
       assertThat(response.boards().get(0).commentCount()).isEqualTo(3);
     }
 
@@ -514,7 +513,7 @@ class BoardServiceTest {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       String title = "가".repeat(79) + "😀" + "나".repeat(10);
       Board board = new Board(1, 1, title, "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, false, 0);
+          LocalDateTime.now(), null, 0, 0);
       when(boardMapper.findAll(any())).thenReturn(List.of(board));
       when(boardMapper.countAll(any())).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
@@ -545,7 +544,7 @@ class BoardServiceTest {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       String longTitle = "가".repeat(90);
       Board board = new Board(1, 1, longTitle, "작성자", "내용", "pw", 0,
-          LocalDateTime.now(), null, false, 0);
+          LocalDateTime.now(), null, 0, 0);
       when(boardMapper.findAll(condition)).thenReturn(List.of(board));
       when(boardMapper.countAll(condition)).thenReturn(1);
       when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
