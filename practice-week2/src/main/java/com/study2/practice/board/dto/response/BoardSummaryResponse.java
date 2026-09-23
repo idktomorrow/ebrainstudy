@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
  * @param viewCount     조회수
  * @param createdAt     최초 등록일시
  * @param updatedAt     수정일시. 수정 이력이 없으면 null
- * @param hasAttachment 첨부파일 존재 여부 (목록 화면 아이콘 표시용)
- * @param commentCount  댓글 수 (목록 화면에 "댓글 N" 표시용)
+ * @param attachmentCount 첨부파일 개수 (목록 화면에 "첨부파일 N" 표시용)
+ * @param commentCount    댓글 수 (목록 화면에 "댓글 N" 표시용)
  */
 public record BoardSummaryResponse(
 
@@ -24,7 +24,7 @@ public record BoardSummaryResponse(
     Integer viewCount,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    boolean hasAttachment,
+    int attachmentCount,
     int commentCount
 ) {
 

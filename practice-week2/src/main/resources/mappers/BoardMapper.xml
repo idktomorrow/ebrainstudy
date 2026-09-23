@@ -47,12 +47,13 @@
     (최신순이라 DESC로 맞춤 -> 같은 초면 나중에 생성된, 즉 id가 큰 게 먼저 나옴)
     목록 응답(BoardSummaryResponse)엔 본문(content)이 없으니 SELECT에서도 뺌 (행마다 최대
     2000자를 불필요하게 읽어오지 않도록). 검색 조건의 content LIKE는 WHERE절이라 그대로 동작.
-    comment_count도 첨부파일 존재 여부(EXISTS)와 같은 방식으로 서브쿼리 COUNT로 붙여서,
-    목록 화면에서 댓글 수까지 한 번의 조회로 나가게 함(게시글마다 댓글 수를 N번 추가 조회하지 않도록).
+    attachment_count/comment_count는 서브쿼리 COUNT로 붙여서, 목록 화면에서 개수까지 한 번의
+    조회로 나가게 함(게시글마다 추가 조회하지 않도록). attachment_count는 원래 EXISTS로 "있다/
+    없다"만 봤는데, comment_count처럼 정확한 개수가 필요해져서 COUNT로 통일함.
   -->
   <select id="findAll" resultType="com.study2.practice.board.entity.Board">
     SELECT id, category_id, writer, title, view_count, created_at, updated_at,
-    EXISTS (SELECT 1 FROM files f WHERE f.board_id = board.id) AS has_attachment,
+    (SELECT COUNT(*) FROM files f WHERE f.board_id = board.id) AS attachment_count,
     (SELECT COUNT(*) FROM comment c WHERE c.board_id = board.id) AS comment_count
     FROM board
     <include refid="searchCondition" />
