@@ -454,8 +454,24 @@ class BoardServiceTest {
     }
 
     @Test
-    @DisplayName("카테고리명을 매칭하고, 댓글 수를 함께 응답한다")
-    void mapsCategoryNameAndCommentCount() {
+    @DisplayName("목록 조회 시 조회된 첨부파일 개수/댓글 수가 null이면 0으로 응답한다")
+    void mapsNullCountsToZero() {
+      BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
+      Board board = new Board(1, 1, "제목", "작성자", "내용", "pw", 0,
+          LocalDateTime.now(), null, null, null);
+      when(boardMapper.findAll(condition)).thenReturn(List.of(board));
+      when(boardMapper.countAll(condition)).thenReturn(1);
+      when(categoryMapper.findAll()).thenReturn(List.of(new Category(1, "공지")));
+
+      BoardListResponse response = boardService.getBoardList(condition);
+
+      assertThat(response.boards().get(0).attachmentCount()).isZero();
+      assertThat(response.boards().get(0).commentCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("카테고리명을 매칭하고, 첨부파일 개수와 댓글 수를 함께 응답한다")
+    void mapsCategoryNameAndAttachmentCountAndCommentCount() {
       BoardSearchRequest condition = new BoardSearchRequest(null, null, null, null, 1, 10);
       Board board = new Board(1, 1, "제목", "작성자", "내용", "pw", 0,
           LocalDateTime.now(), null, 2, 3);
@@ -468,6 +484,7 @@ class BoardServiceTest {
       assertThat(response.totalCount()).isEqualTo(1);
       assertThat(response.boards()).hasSize(1);
       assertThat(response.boards().get(0).categoryName()).isEqualTo("공지");
+      assertThat(response.boards().get(0).attachmentCount()).isEqualTo(2);
       assertThat(response.boards().get(0).commentCount()).isEqualTo(3);
     }
 

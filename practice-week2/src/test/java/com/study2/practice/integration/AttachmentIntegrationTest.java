@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -125,8 +126,39 @@ class AttachmentIntegrationTest {
     assertThat(countFiles()).isEqualTo(filesBefore);
   }
 
+  @Test
+  @DisplayName("목록 조회 시 게시글마다 실제 첨부파일 개수가 함께 응답된다")
+  void list_includesActualAttachmentCount() throws Exception {
+    // 개발 DB에 다른 게시글이 있어도 결과가 흔들리지 않도록 고유 토큰을 제목에 넣고 keyword로 좁힘
+    String unique = UUID.randomUUID().toString().substring(0, 8);
+    int boardWithFiles = createBoard(unique + " 파일 있는 글");
+    createBoard(unique + " 파일 없는 글");
+
+    MockMultipartFile first = new MockMultipartFile("files", "a.txt", "text/plain",
+        "첫번째".getBytes(StandardCharsets.UTF_8));
+    MockMultipartFile second = new MockMultipartFile("files", "b.txt", "text/plain",
+        "두번째".getBytes(StandardCharsets.UTF_8));
+    mockMvc.perform(multipart("/api/boards/{boardId}/files", boardWithFiles)
+            .file(first)
+            .file(second)
+            .param("password", "abc123!@#"))
+        .andExpect(status().isOk());
+
+    // 최신순이라 나중에 만든 "파일 없는 글"이 먼저 나옴
+    mockMvc.perform(get("/api/boards").param("keyword", unique).param("page", "1").param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boards[0].title").value(unique + " 파일 없는 글"))
+        .andExpect(jsonPath("$.boards[0].attachmentCount").value(0))
+        .andExpect(jsonPath("$.boards[1].title").value(unique + " 파일 있는 글"))
+        .andExpect(jsonPath("$.boards[1].attachmentCount").value(2));
+  }
+
   private int createBoard() throws Exception {
-    BoardCreateRequest request = new BoardCreateRequest(1, "김철수", "첨부파일 통합테스트", "본문입니다", "abc123!@#");
+    return createBoard("첨부파일 통합테스트");
+  }
+
+  private int createBoard(String title) throws Exception {
+    BoardCreateRequest request = new BoardCreateRequest(1, "김철수", title, "본문입니다", "abc123!@#");
     String response = mockMvc.perform(post("/api/boards")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
